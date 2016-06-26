@@ -1,0 +1,29 @@
+Web ID,Access ID,Salesorder Number,Shipping Method,Payment Method,
+156758587,45031,47006716,FedEx Ground (order by 8:00 PM CT),MasterCard,
+
+Shipping Address
+First Name,Last Name,Company,Mail Stop,Address Line 1,Address Line 2,City,State,Postal Code,Country,Email Address,Telephone,
+Paul,Adams,,26260 222nd PL SE,26260 222nd PL SE,,Maple Valley,WA,98038,USA,p5a0u9l@uw.edu,5099908810,
+
+Billing Address
+First Name,Last Name,Company,Mail Stop,Address Line 1,Address Line 2,City,State,Postal Code,Country,Email Address,Telephone,
+Paul,Adams,,26260 222nd PL SE,26260 222nd PL SE,,Maple Valley,WA,98038,USA,,5099908810,
+
+Index,Quantity,Part Number,Description,Customer Reference,Available Quantity,Backorder Quantity,Unit Price USD,Extended Price USD,
+1,1,MAX414CPD+-ND,IC OPAMP GP 28MHZ 14DIP,,1,0,6.36000,6.36,
+2,4,478-3147-1-ND,CAP CER 1000PF 50V NP0 AXIAL,,4,0,0.38000,1.52,
+3,1,8.45KXBK-ND,RES 8.45K OHM 1/4W 1% AXIAL,,1,0,0.10000,0.10,
+4,1,102KXBK-ND,RES 102K OHM 1/4W 1% AXIAL,,1,0,0.10000,0.10,
+5,1,MFR-25FBF-7K15,RES 7.15K OHM 1/4W 1% AXIAL,,1,0,0.10000,0.10,
+6,3,MFR-25FBF-1K00,RES 1K OHM 1/4W 1% AXIAL,,3,0,0.10000,0.30,
+7,1,MFR-25FBF-12K1,RES 12.1K OHM 1/4W 1% AXIAL,,1,0,0.10000,0.10,
+8,1,MFR-25FBF-17K4,RES 17.4K OHM 1/4W 1% AXIAL,,1,0,0.10000,0.10,
+9,1,MFR-25FBF-28K0,RES 28K OHM 1/4W 1% AXIAL,,1,0,0.10000,0.10,
+10,1,MFR-25FBF-4K12,RES 4.12K OHM 1/4W 1% AXIAL,,1,0,0.10000,0.10,
+11,1,MFR-25FBF-1K62,RES 1.62K OHM 1/4W 1% AXIAL,,1,0,0.10000,0.10,
+12,1,LM2940CT-5.0,IC REG LDO 5V 1A TO220-3,,1,0,1.68000,1.68,
+13,1,399-9930-ND,CAP TANT 1UF 20V 20% RADIAL,,1,0,0.97000,0.97,
+,,,,,,Subtotal,11.63
+,,,,,,Shipping,unknown
+,,,,,,Estimated Sales Tax,1.00
+,,,,,,Total,unknown
