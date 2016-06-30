@@ -27,35 +27,35 @@ see [bom](bom.txt)
 
 #### Block Diagram
 
-    ![diagram](figs/block_diagram.png)
+![diagram](figs/block_diagram.png)
 
 #### Schedule
 
-    - Proposal
-        o 28-Jun-16 --> Complete
+- Proposal
+    o 28-Jun-16 --> Complete
 
-    - Procurement
-        * Order
-            o 27-Jun-16 --> Complete
-        * Receive
-            o 04-Jul-16 --> Pending
+- Procurement
+    * Order
+        o 27-Jun-16 --> Complete
+    * Receive
+        o 04-Jul-16 --> Pending
 
-    - Physical Build
-        * 05-Jul-16 --> Pending Parts
+- Physical Build
+    * 05-Jul-16 --> Pending Parts
 
-    - RF --> IQ Testing
-        * 12-Jul-16 --> Pending Build
+- RF --> IQ Testing
+    * 12-Jul-16 --> Pending Build
 
-    - "R/T" Software Development
-        * Buffer
-            o 19-Jul-16
-        * Frame-wise FFT
-            o 19-Jul-16
-        * Threshold Detection
-            o 26-Jul-16
-        * Report/Log
-            o 26-Jul-16
+- "R/T" Software Development
+    * Buffer
+        o 19-Jul-16
+    * Frame-wise FFT
+        o 19-Jul-16
+    * Threshold Detection
+        o 26-Jul-16
+    * Report/Log
+        o 26-Jul-16
 
-    - Analytic Software Development
-        * TODO
+- Analytic Software Development
+    * TODO
 
