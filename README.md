@@ -25,6 +25,10 @@ see [bom](bom.txt)
     link is recommended. However, it should be noted (as I found out) that the table was compiled in 2011 and some of the part
     numbers are obsolete. Using the table description should hep find a suitable replacement.
 
+#### Block Diagram
+
+    ![diagram](figs/block_diagram.png)
+
 #### Schedule
 
     - Proposal
