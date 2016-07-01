@@ -47,6 +47,8 @@ see [bom](bom.txt)
     * 12-Jul-16 --> Pending Build
 
 - "R/T" Software Development
+    * RPi initialized
+        o 05-Jul-16
     * Buffer
         o 19-Jul-16
     * Frame-wise FFT
