@@ -30,6 +30,10 @@ real-time playback, peak-speed detection, and combines it with the sound file it
 
     [![Doppler Playbak](https://img.youtube.com/vi/JB-oInUjbWk/0.jpg)](https://www.youtube.com/watch?v=JB-oInUjbWk)
 
+    * As reference, the full doppler image is included
+
+![diagram](figs/doppler_image.png)
+
 #### Block Diagram
 
 ![diagram](figs/block_diagram.png)
