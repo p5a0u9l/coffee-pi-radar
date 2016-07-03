@@ -1,12 +1,16 @@
-function batch_doppler_example()
+function batch_doppler_example(varargin)
     % config
+    keys = varargin(1:2:end);
+    vals = varargin(2:2:end);
+    opts = containers.Map(keys, vals);
+
     fname = fullfile('..', 'reference', 'charvat_doppler', 'Off of Newton Exit 17.wav');
-    Tp = 0.15; %(s) integration period
     os_factor = 8; % oversample factor
     i_chan = 2; % the channel to process
-    do_animation = true;
-    taper_func = @taylorwin;
-    % taper_func = @rectwin;
+
+    Tp = opts('Tp'); %(s) integration period
+    do_animation = opts('animate');
+    taper_func = opts('window');
 
     % Process/Plot
     tic;
@@ -14,7 +18,7 @@ function batch_doppler_example()
     X = process_doppler(x, os_factor, taper_func);  toc
 
     if do_animation
-        animate(X, Tp, length(v));
+        animate(X, Tp, length(v), opts);
     else
         plots(v, x, X); toc
     end
@@ -139,18 +143,20 @@ function plots(v, x, X)
     end
 end
 
-function animate(X, Tp, n_total)
+function animate(X, Tp, n_total, opts)
     MPH_CF = 2.23694;
     FC = 2590E6; %(Hz) Center frequency (connected VCO Vtune to +5 for example)
     C_LIGHT = 3e8; %(m/s) speed of light
 
     set_clim = @(x) caxis([median(x(:)) + 40, max(x(:)) - 3]);
     volt2dB = @(x) 20*log10(abs(x));
+    v = X.';
+    v = ifft(v(:));
 
     [n_dwell, n_filt] = size(X);
     fs = 44100;
     dt = 1/fs;
-    df = fs/n_filt;
+    df = 0.5*fs/n_filt;
     doppler = 0:df:fs/2 - df; % doppler spectrum
 
     %calculate velocity
@@ -162,19 +168,75 @@ function animate(X, Tp, n_total)
 
     X_db = volt2dB(X);
 
-    figure(1); clf;
-    imagesc(v_mph, slow_time, X_db);
-    colorbar; colormap hot;
-    try; set_clim(X_db); catch; end
-    xlim([0, 45]);
-    ylim([0, 5]);
-    ax = gca;
-    xlabel('mph');
-    ylabel('time (sec)');
-    title(sprintf('Doppler Image to 100 mph - %d dwells at %0.3f sec. dwell time', ...
-        n_dwell, dt));
-    for i = 1:n_dwell - 11
-        ax.YLim = ax.YLim + Tp;
-        pause(0.1);
+    f = figure(1); clf;
+    if opts('image')
+        imagesc(v_mph, slow_time, X_db);
+        colorbar; colormap hot;
+        try; set_clim(X_db); catch; end
+        xlim([0, 45]);
+        ylim([0, 5]);
+        ax = gca;
+        xlabel('mph');
+        ylabel('time (sec)');
+        title(sprintf('Doppler Image to 100 mph - %d dwells at %0.3f sec. dwell time', ...
+            n_dwell, dt));
+        for i = 1:n_dwell - 11
+            ax.YLim = ax.YLim + Tp;
+            pause(0.1);
+        end
+    else
+        idx = 1:5;
+        ax(1) = subplot(211);
+        plot(v_mph, mean(X_db(idx, :)), '.');
+        ax(1).NextPlot = 'add';
+        plot(0, 0, 'r*');
+        xlim([0, 100]);
+        ylim([-50, 30]);
+        grid on;
+        xlabel('mph');
+        ylabel('dB');
+        ax(1).Title.String = sprintf('Time: %d sec. Speed: %d mph', ...
+                    floor(opts('Tp')), 0);
+        ax(1).Title.FontSize = 16;
+
+        ax(2) = subplot(212);
+        imagesc(v_mph, (1:5)*opts('Tp'), X_db(idx, :));
+        colormap hot;
+        caxis([-10, 30]);
+        xlim([0, 100]);
+        xlabel('mph');
+        ylabel('sec');
+        ax(2).Title.String = sprintf('Window: %s. Dwell Period: %d ms. Detection Period: %d ms', ...
+                char(opts('window')), 1e3*(opts('Tp')), 1e3*5*opts('Tp'));
+
+        if 0
+            vid = VideoWriter('doppler_playback.avi');
+            vid.FrameRate = round(1/opts('Tp'));
+            vid.Quality = 90;
+            open(vid);
+        end
+
+        for i = 2:n_dwell - 5
+            tic;
+            ydata = mean(X_db(idx + i, :));
+            [v_peak, i_peak] = max(ydata);
+            ax(1).Children(2).YData = ydata;
+            ax(1).Title.String = sprintf('Time: %d seconds. Speed: %d mph', ...
+                floor(i*opts('Tp')), round(v_mph(i_peak)));
+            ax(1).Children(1).XData = v_mph(i_peak);
+            ax(1).Children(1).YData = v_peak;
+
+            ax(2).Children(1).CData = X_db(idx + i, :);
+            ydata = opts('Tp')*(idx + i);
+            ax(2).Children(1).YData = ydata;
+            ax(2).YLim = ([min(ydata), max(ydata)]);
+
+            if 0
+                frame = getframe(f);
+                writeVideo(vid, frame);
+            end
+            pause(opts('Tp') - toc);
+        end
+        if 0; close(vid); end
     end
 end
