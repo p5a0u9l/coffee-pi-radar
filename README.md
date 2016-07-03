@@ -20,7 +20,7 @@ Doppler radar is an older technology that is finding renewed interest with moder
 #### Doppler Processing Playback
 
 - Using the sample data from the [MIT opencourseware site](http://ocw.mit.edu/resources/res-ll-003-build-a-small-radar-system-capable-of-sensing-range-doppler-and-synthetic-aperture-radar-imaging-january-iap-2011/) I developed a visualization tool that demonstrates
-real-time playback, peak-speed detection, and combines it with the sound file itself.
+real-time playback, peak-speed detection, and combines it with the sound file itself. I uploaded the video to youtube and it can be access by clicking the image below.
 
     * The upper subplot is a frequency view (transformed to speed in mph) of an average over 5 coherent integration periods, or "dwells". Each dwell is over 50 ms, and so the doppler spectrum being shown is over 250 ms, a 1/4 of a second. This seems a reasonable rate at which to track vehicle movement. Assuming, of course, the vehicle has negligible accelaration over this period.
 
@@ -30,7 +30,7 @@ real-time playback, peak-speed detection, and combines it with the sound file it
 
     [![Doppler Playbak](https://img.youtube.com/vi/JB-oInUjbWk/0.jpg)](https://www.youtube.com/watch?v=JB-oInUjbWk)
 
-    * As reference, the full doppler image is included
+    * Also, the full doppler image is included as reference
 
 ![diagram](figs/doppler_image.png)
 
