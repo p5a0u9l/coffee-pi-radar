@@ -74,7 +74,7 @@ real-time playback, peak-speed detection, and combines it with the sound file it
 
 see [bom](bom.txt)
 
-    NOTE: Materials unique to this project are contained in the second table. For the first table, the more complete BOM in the above
-    link is recommended. However, it should be noted (as I found out) that the table was compiled in 2011 and some of the part
-    numbers are obsolete. Using the table description should hep find a suitable replacement.
+-   NOTE: Materials unique to this project are contained in the second table. For the first table, the more complete BOM in the above
+link is recommended. However, it should be noted (as I found out) that the table was compiled in 2011 and some of the part
+numbers are obsolete. Using the table description should hep find a suitable replacement.
 

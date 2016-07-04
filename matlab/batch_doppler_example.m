@@ -17,6 +17,7 @@ function batch_doppler_example(varargin)
     [v, x] = fetch_and_format(fname, Tp, i_chan); toc
     X = process_doppler(x, os_factor, taper_func);  toc
 
+    error();
     if do_animation
         animate(X, Tp, length(v), opts);
     else
