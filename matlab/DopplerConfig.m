@@ -11,8 +11,10 @@ classdef DopplerConfig < handle
         taper
         i_samp
         i_chan
+        i_dwell
         n_filt
         v_mph
+        funcs
         max_filt
         debug_level
         noise_est
@@ -36,6 +38,7 @@ classdef DopplerConfig < handle
     methods
         function me = DopplerConfig(args)
             me.i_samp = 0;
+            me.i_dwell = 0;
             me.wav = args('wav_file');
             I = audioinfo(me.wav);
             me.noise_est = [];
@@ -63,6 +66,8 @@ classdef DopplerConfig < handle
             lambda = me.C_LIGHT/me.FC;
             df = me.fs/me.n_filt;
             doppler = 0:df:me.fs/2 - df; % doppler spectrum
+            me.funcs.dop2mph = @(dop) me.MPH_CF*dop*lambda/2;
+            me.funcs.mph2dop = @(mph) 2*mph/(me.MPH_CF*lambda);
             me.v_mph = me.MPH_CF*doppler*lambda/2;
             max_doppler = 2*me.v_max_mph/(me.MPH_CF*lambda);
             [~, me.max_filt] = min(abs(doppler - max_doppler));

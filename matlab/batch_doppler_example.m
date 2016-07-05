@@ -17,7 +17,6 @@ function batch_doppler_example(varargin)
     [v, x] = fetch_and_format(fname, Tp, i_chan); toc
     X = process_doppler(x, os_factor, taper_func);  toc
 
-    error();
     if do_animation
         animate(X, Tp, length(v), opts);
     else
@@ -186,7 +185,7 @@ function animate(X, Tp, n_total, opts)
             pause(0.1);
         end
     else
-        idx = 1:5;
+        idx = 1:opts('n_dwell');
         ax(1) = subplot(211);
         plot(v_mph, mean(X_db(idx, :)), '.');
         ax(1).NextPlot = 'add';

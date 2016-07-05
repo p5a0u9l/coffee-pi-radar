@@ -1,4 +1,4 @@
-function event_doppler(varargin)
+function dc = event_doppler(varargin)
     % config
     args = containers.Map(varargin(1:2:end), varargin(2:2:end));
     dc = DopplerConfig(args);
@@ -24,13 +24,13 @@ end
 function x = fetch_and_format(dc)
     start_samp = dc.i_samp + 1;
     dc.i_samp = start_samp + dc.n_samp*dc.n_dwell_detect - 1;
-    if dc.debug_level >= 1; fprintf('Fetch and Format... samples: %d to %d...', start_samp, dc.i_samp); end
+    if dc.debug_level >= 2; fprintf('Fetch and Format... samples: %d to %d...', start_samp, dc.i_samp); end
     [v, ~] = audioread(dc.wav, [start_samp, dc.i_samp]);
     x = reshape(v(:, dc.i_chan)', dc.n_samp, dc.n_dwell_detect).'; % let each row have n_samp samples
 end
 
 function [v, i, n0] = reduce_doppler(x, dc)
-    if dc.debug_level >= 1; fprintf('Doppler Process... \n'); end
+    if dc.debug_level >= 2; fprintf('Doppler Process... \n'); end
     x_w = bsxfun(@times, x, dc.taper);
     X = fft(x_w, dc.n_filt, 2);
     X = 20*log10(abs(X(:, 1:dc.max_filt)));
@@ -46,7 +46,7 @@ function update_state(v, i, n0, dc)
         dc.noise_est = dc.alpha0*dc.noise_est + dc.beta1*n0;
     end
 
-    dc.state.SpeedEst = -1;
+    dc.state.SpeedEst = nan;
     if n0 > dc.noise_est + dc.pass_thresh
         if ~dc.state.Passing % if changing state, inc. counter
             dc.state.VehicleCount = dc.state.VehicleCount + 1;
@@ -58,6 +58,15 @@ function update_state(v, i, n0, dc)
         dc.state.SpeedEst = dc.v_mph(i);
     end
     if v <= dc.noise_est + dc.actv_thresh; dc.state.Active = false; end
+
+    % update debug variables
+    if dc.debug_level >= 1
+        dc.i_dwell = dc.i_dwell + 1;
+        dc.state.n_i(dc.i_dwell) = n0;
+        dc.state.n_a(dc.i_dwell) = dc.noise_est;
+        dc.state.v_mph(dc.i_dwell) = dc.state.SpeedEst;
+    end
+
 end
 
 function show_state(dc, v, n0)
