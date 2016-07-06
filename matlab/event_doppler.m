@@ -29,13 +29,14 @@ function x = fetch_and_format(dc)
     x = reshape(v(:, dc.i_chan)', dc.n_samp, dc.n_dwell_detect).'; % let each row have n_samp samples
 end
 
-function [v, i, n0] = reduce_doppler(x, dc)
+function [v, i, p0, n0] = reduce_doppler(x, dc)
     if dc.debug_level >= 2; fprintf('Doppler Process... \n'); end
-    x_w = bsxfun(@times, x, dc.taper);
-    X = fft(x_w, dc.n_filt, 2);
+    x_w = bsxfun(@times, x, dc.taper); % apply taper to each row
+    X = fft(x_w, dc.n_filt, 2); % fft along rows
     X = 20*log10(abs(X(:, 1:dc.max_filt)));
-    n0 = mean(X(:));
-    [v, i] = max(mean(X));
+    n0 = median(X(:));
+    p0 = sum(X(:));
+    [v, i] = max(mean(X)); % take mean over rows, then select the max filter bin
 end
 
 function update_state(v, i, n0, dc)

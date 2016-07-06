@@ -1,4 +1,4 @@
-## Coffee Can Real-Time Doppler Radar
+## Software-Defined Radar using Raspberry Pi and Coffee Cans
 #### Project for UW EE542 - Advanced Embedded Systems Design
 
 ### Overview
@@ -16,6 +16,28 @@ This documentation will attempt to serve as a guide for duplicating and possibly
 #### Abstract
 
 Doppler radar is an older technology that is finding renewed interest with modern computing hardware and software advances. It is widely used in applications like weather forecasting, law enforcement, aerospace, and healthcare. The technology exploits the Doppler effect to remotely capture data about a moving object's velocity. Additionally, system-on-a-chip technology is continually making it easier to deploy complicated embedded systems. This project will leverage the Cantenna Radar project developed by Dr. Gregory Charvat at MIT interfaced via a sound card to a Raspberry Pi to develop and deploy a simple, real-time Doppler Radar. The system will be used to measure, log, and analyze the speed of vehicles on a residential street over time.
+
+#### Design Requirements
+
+##### Dwell Period
+
+  - In signal processing there is often found a fundamental trade-off between resolution in the time domain vs. resolution in the frequency domain. Because our doppler radar utilizes a continuous-wave (CW) waveform, we have fewer constraints on our signal integration time than a pulsed radar would have. The shorter the dwell period is the more time resolution will be available, which is important for systems with rapidly changing environments. Similarly, the longer the dwell period,
+    the more frequency resolution is available.
+    Considering the use case of measuring the speed of moving vehicles, the upper bound on how long to integrate is based on how long we can anticipate the sensed environment remaining approximately stationary. This could easily be on the order of milliseconds, but is probably not on the order of seconds.
+    - With a fuzzy upper bound on integration time, we might ask to what level of accuracy speed detection is desired. Most stand-alone doppler systems display speed to drivers in single digits. Therefore, a resolution of 1 mph is probably sufficient.
+    - Choosing that value as the required accuracy, we can ask, how many Hz does 1 mph correspond with. This can be found from solving the below for $v\_{mph} = 1$
+
+\begin{align}
+    f_{doppler} = \frac{2 v_{mph}}{K \lambda}
+\end{align}
+
+where $\lambda$ is the wave length in meters, and $K$ is a conversion factor to mph. We get ~7.7 Hz for 1 mph at 2.4 GHz carrier. Using the definition of frequnecy resolution,
+
+\begin{align}
+    \Delta f = 1/T
+\end{align}
+
+and solving for signal time $T$, we have ~130 ms of FFT integration will provide 1 mph resolution. This value is easily within our expectations for sensed environment stationarity.
 
 #### Doppler Processing Playback
 
