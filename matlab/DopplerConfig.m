@@ -18,6 +18,8 @@ classdef DopplerConfig < handle
         max_filt
         debug_level
         noise_est
+        alpha_n
+        beta_n
     end
 
     properties(Constant)
@@ -26,13 +28,9 @@ classdef DopplerConfig < handle
         C_LIGHT = 3e8; %(m/s) speed of light
 
         % Thresholds
-        pass_thresh = 2.5; % instantaneous noise level indicating vehicle crossing
+        pass_thresh = 0.5; % instantaneous noise level indicating vehicle crossing
         actv_thresh = 28; % peak must be X dB above noise est
-        v_max_mph = 500;% suppress speeds above 50 mph
-
-        % iir filter coeffs
-        alpha0 = 0.9; % historical value weighting
-        beta1 = 0.1; % current measurement weighting
+        v_max_mph = 4000;% suppress speeds above 50 mph
     end
 
     methods
@@ -56,6 +54,7 @@ classdef DopplerConfig < handle
             me.debug_level = args('debug_level');
 
             % State
+            me.state.real_time = args('real_time');
             me.state.Active = false; % indicates there is moving object in frame,
             % assuming peak value is x dB above noise
             me.state.Passing = false; % indicates an object is passing the radar,
@@ -71,6 +70,11 @@ classdef DopplerConfig < handle
             me.v_mph = me.MPH_CF*doppler*lambda/2;
             max_doppler = 2*me.v_max_mph/(me.MPH_CF*lambda);
             [~, me.max_filt] = min(abs(doppler - max_doppler));
+
+            % iir filter coeffs
+            % noise filter
+            me.alpha_n = 0.90; % historical value weighting
+            me.beta_n = 1 - me.alpha_n; % current measurement weighting
         end
     end
 end

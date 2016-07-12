@@ -156,10 +156,10 @@ function animate(X, Tp, n_total, opts)
     [n_dwell, n_filt] = size(X);
     fs = 44100;
     dt = 1/fs;
-    df = 0.5*fs/n_filt;
-    doppler = 0:df:fs/2 - df; % doppler spectrum
 
     %calculate velocity
+    df = 0.5*fs/n_filt;
+    doppler = 0:df:fs/2 - df; % doppler spectrum
     lambda = C_LIGHT/FC;
     v_mph = MPH_CF*doppler*lambda/2;
 

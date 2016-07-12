@@ -14,11 +14,15 @@ function dc = event_doppler(varargin)
 
         % Check for EOF and enforce real-time
         eof = dc.i_samp >= dc.n_total - dc.n_dwell_detect*dc.n_samp; % within one dwell of eof
-        pause(dc.Tp*dc.n_dwell_detect - toc);
 
         show_state(dc, v, n0);
+        margin = dc.Tp*dc.n_dwell_detect - toc;
+        if ~args('real_time')
+            pause(margin);
+        else
+            pause(eps)
+        end
     end
-
 end
 
 function x = fetch_and_format(dc)
@@ -29,14 +33,22 @@ function x = fetch_and_format(dc)
     x = reshape(v(:, dc.i_chan)', dc.n_samp, dc.n_dwell_detect).'; % let each row have n_samp samples
 end
 
-function [v, i, p0, n0] = reduce_doppler(x, dc)
+function [v, i, n0] = reduce_doppler(x, dc)
     if dc.debug_level >= 2; fprintf('Doppler Process... \n'); end
     x_w = bsxfun(@times, x, dc.taper); % apply taper to each row
     X = fft(x_w, dc.n_filt, 2); % fft along rows
-    X = 20*log10(abs(X(:, 1:dc.max_filt)));
-    n0 = median(X(:));
-    p0 = sum(X(:));
-    [v, i] = max(mean(X)); % take mean over rows, then select the max filter bin
+    %X = 20*log10(abs(X(:, 1:dc.max_filt)));
+    X = 20*log10(abs(X(:, 1:dc.n_filt/2)));
+    n0 = mean(X(:));
+    [v, i] = max(mean(X, 1)); % take mean over rows, then select the max filter bin
+    if ~dc.state.real_time
+        cla
+        plot(dc.v_mph, mean(X, 1), '.-')
+        hold on;
+        plot(dc.v_mph(i), v, 'r*');
+        xlim([0, 100])
+        ylim([-50, 50])
+    end
 end
 
 function update_state(v, i, n0, dc)
@@ -44,7 +56,7 @@ function update_state(v, i, n0, dc)
         dc.noise_est = n0; % initial value
     else
         % current noise est. is weight last est. + weighted current measurement
-        dc.noise_est = dc.alpha0*dc.noise_est + dc.beta1*n0;
+        dc.noise_est = dc.alpha_n*dc.noise_est + dc.beta_n*n0;
     end
 
     dc.state.SpeedEst = nan;
@@ -67,10 +79,9 @@ function update_state(v, i, n0, dc)
         dc.state.n_a(dc.i_dwell) = dc.noise_est;
         dc.state.v_mph(dc.i_dwell) = dc.state.SpeedEst;
     end
-
 end
 
 function show_state(dc, v, n0)
-    fprintf('Noise Est: %.2f\tInst. Noise: %.2f\tPeak: %.2f\tPassing: %d\tActive: %d\tSpeed: %0.1f\tVehicle Count: %d\n',...
-            dc.noise_est, n0, v, dc.state.Passing, dc.state.Active, dc.state.SpeedEst, dc.state.VehicleCount);
+    fprintf('Time: %.2f\tnoise: %.2f\tpower: %.2f\tPeak: %.2f\tPassing: %d\tActive: %d\tSpeed: %0.1f\tVehicle Count: %d\n',...
+        dc.i_samp/dc.fs, dc.noise_est, n0, v, dc.state.Passing, dc.state.Active, round(dc.state.SpeedEst), dc.state.VehicleCount);
 end
