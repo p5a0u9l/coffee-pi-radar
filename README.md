@@ -2,6 +2,15 @@
 #### Project for UW EE542 - Advanced Embedded Systems Design
 
 ### Overview
+#### Git Basics
+To clone this repository you must have a `git` client installed. This overview will assume you have installed [git for windows](https://git-scm.com/download/win) and have the `git` bash shell available. Although, the instructions will work in any UNIX-like shell environment.
+
+-  Clone the repository by executing
+`git clone https://github.com/p5a0u9l/ee542`
+
+- This will download and place the files in a folder called `ee542`
+
+- To add material to the repository simply move the file(s) to folder containing the repo. `git` will automatically see these new files. If, from the bash shell, inside the repo (possibly need a `cd ee542`), you enter `git status`, you will see something like
 
 #### Motivation
 Dr. Gregory Charvat _et al_ developed and documented a simple, yet powerful [laptop radar system](http://ocw.mit.edu/resources/res-ll-003-build-a-small-radar-system-capable-of-sensing-range-doppler-and-synthetic-aperture-radar-imaging-january-iap-2011/projects/MITRES_LL_003IAP11_proj_in.pdf) that uses coffee cans as Receive/Transmit Antennas.
@@ -27,9 +36,7 @@ Doppler radar is an older technology that is finding renewed interest with moder
     - With a fuzzy upper bound on integration time, we might ask to what level of accuracy speed detection is desired. Most stand-alone doppler systems display speed to drivers in single digits. Therefore, a resolution of 1 mph is probably sufficient.
     - Choosing that value as the required accuracy, we can ask, how many Hz does 1 mph correspond with. This can be found from solving the below for $v\_{mph} = 1$
 
-\begin{align}
     f_{doppler} = \frac{2 v_{mph}}{K \lambda}
-\end{align}
 
 where $\lambda$ is the wave length in meters, and $K$ is a conversion factor to mph. We get ~7.7 Hz for 1 mph at 2.4 GHz carrier. Using the definition of frequnecy resolution,
 
