@@ -11,10 +11,11 @@ To clone this repository you must have a `git` client installed. This overview w
 - This will download and place the files in a folder called `ee542`
 
 - To add material to the repository simply move the file(s) to folder containing the repo.
-    o `git` will automatically see these new files.
-    o If, from the bash shell, inside the repo (possibly need a `cd ee542`), you enter `git status`, you will see something like
+- `git` will automatically see these new files.
+- If, from the bash shell, inside the repo (possibly need a `cd ee542`), you enter `git status`, you will see something like
 ![diagram](figs/gst.png)
-
+- The simplest way to push this new file to `github.com` is with
+`git add -A && git commit -m "this is my message" && git push origin master`
 
 #### Motivation
 Dr. Gregory Charvat _et al_ developed and documented a simple, yet powerful [laptop radar system](http://ocw.mit.edu/resources/res-ll-003-build-a-small-radar-system-capable-of-sensing-range-doppler-and-synthetic-aperture-radar-imaging-january-iap-2011/projects/MITRES_LL_003IAP11_proj_in.pdf) that uses coffee cans as Receive/Transmit Antennas.
