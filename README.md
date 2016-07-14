@@ -16,6 +16,8 @@ To clone this repository you must have a `git` client installed. This overview w
 ![diagram](figs/gst.png)
 - The simplest way to push this new file to `github.com` is with
 `git add -A && git commit -m "this is my message" && git push origin master`
+- The output should look something like
+![diagram](figs/push.png)
 
 #### Motivation
 Dr. Gregory Charvat _et al_ developed and documented a simple, yet powerful [laptop radar system](http://ocw.mit.edu/resources/res-ll-003-build-a-small-radar-system-capable-of-sensing-range-doppler-and-synthetic-aperture-radar-imaging-january-iap-2011/projects/MITRES_LL_003IAP11_proj_in.pdf) that uses coffee cans as Receive/Transmit Antennas.
