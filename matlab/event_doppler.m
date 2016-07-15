@@ -2,10 +2,10 @@ function dc = event_doppler(varargin)
     % config
     args = containers.Map(varargin(1:2:end), varargin(2:2:end));
     dc = DopplerConfig(args);
+    dc.wav.record(dc.n_dwell_detect*dc.Tp);
 
     % Loop until EOF
     eof = false;
-    pause(0.1);
     while ~eof
         tic;
         x = fetch_and_format(dc);
@@ -16,20 +16,27 @@ function dc = event_doppler(varargin)
         eof = dc.i_samp >= dc.n_total - dc.n_dwell_detect*dc.n_samp; % within one dwell of eof
 
         show_state(dc, v, n0);
+
         margin = dc.Tp*dc.n_dwell_detect - toc;
-        if ~args('real_time')
+        if args('real_time')
             pause(margin);
         else
-            pause(eps)
+            drawnow
         end
     end
 end
 
 function x = fetch_and_format(dc)
-    start_samp = dc.i_samp + 1;
-    dc.i_samp = start_samp + dc.n_samp*dc.n_dwell_detect - 1;
-    if dc.debug_level >= 2; fprintf('Fetch and Format... samples: %d to %d...', start_samp, dc.i_samp); end
-    [v, ~] = audioread(dc.wav, [start_samp, dc.i_samp]);
+    if dc.is_file
+        start_samp = dc.i_samp + 1;
+        dc.i_samp = start_samp + dc.n_samp*dc.n_dwell_detect - 1;
+        if dc.debug_level >= 2; fprintf('Fetch and Format... samples: %d to %d...', start_samp, dc.i_samp); end
+        [v, ~] = audioread(dc.wav, [start_samp, dc.i_samp]);
+    else
+        while dc.wav.get('TotalSamples') < dc.n_samp*dc.n_dwell_detect; end
+        v = dc.wav.getaudiodata();
+        dc.wav.record(dc.n_dwell_detect*dc.Tp);
+    end
     x = reshape(v(:, dc.i_chan)', dc.n_samp, dc.n_dwell_detect).'; % let each row have n_samp samples
 end
 
@@ -41,14 +48,9 @@ function [v, i, n0] = reduce_doppler(x, dc)
     X = 20*log10(abs(X(:, 1:dc.n_filt/2)));
     n0 = mean(X(:));
     [v, i] = max(mean(X, 1)); % take mean over rows, then select the max filter bin
-    if ~dc.state.real_time
-        cla
-        plot(dc.v_mph, mean(X, 1), '.-')
-        hold on;
-        plot(dc.v_mph(i), v, 'r*');
-        xlim([0, 100])
-        ylim([-50, 50])
-    end
+    dc.ax.Children(2).YData = mean(X, 1);
+    dc.ax.Children(1).XData = dc.v_mph(i);
+    dc.ax.Children(1).YData = v;
 end
 
 function update_state(v, i, n0, dc)

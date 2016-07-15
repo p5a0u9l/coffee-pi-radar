@@ -1,7 +1,9 @@
 classdef DopplerConfig < handle
     properties
+        ax
         state
         wav
+        is_file
         n_total
         n_samp
         Tp
@@ -35,23 +37,33 @@ classdef DopplerConfig < handle
 
     methods
         function me = DopplerConfig(args)
+            taper_func = eval(sprintf('@%swin', args('windowing_function')));
+            me.debug_level = args('debug_level');
+
+            me.Tp = args('dwell_period_ms')/1000;
+            me.oversample = args('oversample_factor');
+            me.n_dwell_detect = args('n_detection_dwell');
             me.i_samp = 0;
             me.i_dwell = 0;
             me.wav = args('wav_file');
-            I = audioinfo(me.wav);
+            me.i_chan = args('channel_vector');
+            if ~isempty(me.wav)
+                I = audioinfo(me.wav);
+                me.n_total = I.TotalSamples;
+                me.fs = I.SampleRate;
+                me.is_file = true;
+            else
+                me.n_total = inf;
+                me.fs = 44100;
+                me.is_file = false;
+                me.wav = audiorecorder(me.fs, 16, me.i_chan, 0);
+                me.wav.record(2*me.Tp);
+            end
             me.noise_est = [];
-            me.n_total = I.TotalSamples;
-            me.fs = I.SampleRate;
-            me.oversample = args('oversample_factor');
-            me.Tp = args('dwell_period_ms')/1000;
             me.n_samp = round(me.Tp*me.fs);
             me.Tp = me.n_samp/me.fs;
-            me.n_dwell_detect = args('n_detection_dwell');
-            me.i_chan = args('channel_vector');
-            me.n_filt = me.oversample*2^nextpow2(me.n_samp);
-            taper_func = eval(sprintf('@%swin', args('windowing_function')));
             me.taper = window(taper_func, me.n_samp).';
-            me.debug_level = args('debug_level');
+            me.n_filt = me.oversample*2^nextpow2(me.n_samp);
 
             % State
             me.state.real_time = args('real_time');
@@ -75,6 +87,14 @@ classdef DopplerConfig < handle
             % noise filter
             me.alpha_n = 0.90; % historical value weighting
             me.beta_n = 1 - me.alpha_n; % current measurement weighting
+
+            plot(me.v_mph, me.v_mph, '.-'); hold on;
+            plot(me.v_mph(1), 1, 'r*'); hold off;
+            xlim([0, 200])
+            ylim([-50, 50])
+            xlabel('velocity [mph]'); ylabel('dB'); title('Audio Spectrum');
+            me.ax = gca;
+            grid on;
         end
     end
 end
