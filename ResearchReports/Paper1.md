@@ -29,9 +29,15 @@ the radar is tasked with assuming an Electronic Attack role. In this case, most 
 receive. The software switches to a mode that actively acquires the parameters of the radar modes being used by adversarial radars
 and begins to use jamming techniques to inhibit the threat's situational awareness.
 
-It isn't hard to see the many strategic and cost advantages of re-configuring at will. The major of deployed radars, defense or
+It isn't hard to see the many strategic and cost advantages of re-configuring at will. The majority of deployed radars, defense or
 otherwise, are single purpose, active surveillance, passive surveillance, fire control, weapons guidance, Electronic Attack. Each
 payload is an independant and expensive procurment.
 
 ### Cognitive Radar
-In the case of software-defined radars (SDR), the command to change modes will come from an onboard or offboard operator
+In the case of software-defined radars (SDR), the command to change modes will come from an onboard or offboard operator. The step
+beyond software radars is one the minimizes or removes the human in the loop. A Cognitive Radar is one that uses the information
+gained from sensing the environment to improve or adapt its mission according to a set of parameters. Traditional radars have been
+configured in a mostly feed-forward sense, where there is no input from the controller to the radar. Cognitive radars not only have feed-back central to their design, but autonomously act upon the information and change configuration to optimize performance. A nice
+and well-known example from nature is how bats will tune their sonar parameters as they close on their prey. They will start in
+a surveillance mode, with high-doppler resolution, and lower range resolution. As they near the target, the pulse repetition
+frequency changes to de-emphasize the doppler information and zero in on location.
