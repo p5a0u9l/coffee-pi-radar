@@ -39,8 +39,12 @@ As seen in Figure 1, the radar transmitter is controlled by a System Objective a
 radiates a signal into the environment. The signal interacts with and scatters off of entities within the illumination field-of-view. The sensor, in turn, receives a signal that is a combination of the transmit signal, environment effects, and possible interference sources. Among the environment effects are typically desired components and undesired components. The processor churns through the
 data collected by the sensor, minimizes unwanted signals, maximizes desired signals, and reduces it all to a set of detections with measurements and associated uncertainties. These are then sent to a tracker to correlate and extract desired target parameters, such as position, velocity, and possibly identity. It is at this stage that conventional radar systems end. An operator may view the tracks on a display. There might be coordination or action taken based on input from the tracks.
 
-In a cognitive radar, the target state estimate and associated covariance is passed to a Perception block which uses a model to predict which mode parameter changes would optimize the state estimate. These parameter updates are sent to control block that activates the new transmitter parameters and the loop repeats.
+In a cognitive radar, the target state estimate and associated covariance is passed to a Perception block which uses a model to predict which mode parameter changes would optimize the state estimate. These parameter updates are sent to control block that activates the new transmitter parameters and the loop repeats. In this way, errors in target detection are minimized and surveillance focus is easily redirected with reduced settling time.
 
-A well-known example from nature is bats using echolocation. will tune their sonar parameters as they close on their prey. They will start in
+We have discussed a use case of cognitive radar that involves optimizing a set of detection parameters for a single mode of operation. An additional level of complexity would be to incorporate the software-defined radar and switch modes dynamically based on external input or autonomously given internal conditions in the Perception block. It is this combination of parameter optimization and mode adaptivity that is incredibly demonstrated in bats using acoustic pulses.
+
+### An Example from Nature
+A well-known example from nature and the result of extensive research is that of bats using echolocation for foraging/hunting and social interaction.
+They will start in
 a surveillance mode, with high-doppler resolution, and lower range resolution. As they near the target, the pulse repetition
 frequency changes to de-emphasize the doppler information and zero in on location.
