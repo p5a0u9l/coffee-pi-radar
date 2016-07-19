@@ -35,7 +35,7 @@ In the case of SDR, the command to change modes will come from an onboard or off
 
 Traditional radars have been configured in a mostly feed-forward sense, where there is no input from the controller to the radar. With some systems a radar operator may have the ability to change transmit parameters based on features seen on a display, but these are limited by response time and ability. Cognitive radars not only have feed-back central to their design, but are able to autonomously act upon the information and change configuration to optimize performance.
 
-![diagram](figs/cog_diagram.png)
+![diagram](../figs/cog_diagram.png)
 
 A well-known example from nature is bats using echolocation. will tune their sonar parameters as they close on their prey. They will start in
 a surveillance mode, with high-doppler resolution, and lower range resolution. As they near the target, the pulse repetition
