@@ -1,4 +1,4 @@
-# Cognitive Radar Survey
+# Overview of Cognitive Radar
 #### by Paul Adams and Lincoln Young
 
 ## Motivation
@@ -16,7 +16,6 @@ that are already highly accurate in the short term can additionally be disciplin
 
 Every RF system that leverages computing requires an Analog-Digital Converter or Digital-Analog Converter or both. The sampling speed continues to improve and state-of-the-art systems can now sample at  about 2 GHz. The trend is pushing toward the ability to directly sample RF and do away with the traditional heterodyne receiver. The signal would go straight from an antenna/transducer, through an LNA and the ADC to the processing device, skipping the IF stage, with its mixers and filters, entirely. Of course, being able to sample up above X-band (~10 GHz) implies computing and data routing that can handle the massive bandwidth.
 
-
 ### Software-Defined Radar
 
 A software-defined radar (SDR) is one where components like mixers, filters, and amplifiers are implemented on an FPGA, an embedded microchip or even a general purpose computer. A key feature of an SDR is the ability to reconfigure system operation with minimal or no hardware changes. As capability is migrated from analog to digital, increasing flexibility opens the door to radars that are capable of switching modes and/or waveforms based on scheduling or some control source - external or internal. Given an RF front-end with some flexibility in tuned frequency, polarity of elements (radiate, listen, or duplex), an antenna with a wideband response,
@@ -29,13 +28,18 @@ a second thought as various vendors solve the same problems in various ways. Com
 
 ## Cognitive Radar
 
-With the advent of flexible, software driven radar system architectures, the ability to apply real-time adaptation is increasingly within reach. Cognitive radar is not a new idea, but the techonological enablers have lacking to make implementation feasible. With the advances in the above mentioned sectioned, cognitive radar becomes more and more feasible.
+With the advent of flexible, software driven radar system architectures, the ability to apply real-time adaptation is increasingly within reach. A cognitive radar closes the feedback loop and uses information pulled from the environment to adjust and improve the picture. The idea is not new, but the techonological enablers have remained far enough out of reach as to make implementation impractical. However, given the advances in the above mentioned sectioned, cognitive radar becomes more feasible.
 
-In the case of SDR, the command to change modes will come from an onboard or offboard operator. The step beyond software radars is one that minimizes or removes the human in the loop. A Cognitive Radar is one that uses the information gained from sensing the environment to improve or adapt its mission according to a set of parameters.
+Traditional radars have been configured in a mostly feed-forward sense, where there is no input from the controller to the radar. With some systems a radar operator may have the ability to change transmit parameters based on features seen on a display, but these are limited by response time, ability, and hardware/software limitations. Cognitive radars not only have feed-back central to their design, but are able to autonomously act upon the information and change configuration to optimize performance.
 
-Traditional radars have been configured in a mostly feed-forward sense, where there is no input from the controller to the radar. With some systems a radar operator may have the ability to change transmit parameters based on features seen on a display, but these are limited by response time and ability. Cognitive radars not only have feed-back central to their design, but are able to autonomously act upon the information and change configuration to optimize performance.
+### A Day in the Life of a Signal
+![Cognitive Radar Architecture](../figs/cog_diagram.png)
 
-![diagram](../figs/cog_diagram.png)
+As seen in Figure 1, the radar transmitter is controlled by a System Objective and a set of Mode Parameters. An example of a system objective might be active surveillance - scan a given sector and track detected entities. Among the mode parameters are the waveform carrier frequency, the pulse bandwidth, the pulse repetition interval, and the pulse duration. Given these inputs, the transmitter
+radiates a signal into the environment. The signal interacts with and scatters off of entities within the illumination field-of-view. The sensor, in turn, receives a signal that is a combination of the transmit signal, environment effects, and possible interference sources. Among the environment effects are typically desired components and undesired components. The processor churns through the
+data collected by the sensor, minimizes unwanted signals, maximizes desired signals, and reduces it all to a set of detections with measurements and associated uncertainties. These are then sent to a tracker to correlate and extract desired target parameters, such as position, velocity, and possibly identity. It is at this stage that conventional radar systems end. An operator may view the tracks on a display. There might be coordination or action taken based on input from the tracks.
+
+In a cognitive radar, the target state estimate and associated covariance is passed to a Perception block which uses a model to predict which mode parameter changes would optimize the state estimate. These parameter updates are sent to control block that activates the new transmitter parameters and the loop repeats.
 
 A well-known example from nature is bats using echolocation. will tune their sonar parameters as they close on their prey. They will start in
 a surveillance mode, with high-doppler resolution, and lower range resolution. As they near the target, the pulse repetition
