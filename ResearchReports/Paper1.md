@@ -5,14 +5,7 @@
 
 ### Advanced Radar Catalysts
 
-A simple picture of a radar includes a baseband to RF signal chain, starting with a given waveform and terminating in a radiating antenna, a receiving antenna, followed by an RF to baseband signal chain, and computing resources to process the signal, reduce the data, and extract useful information.
-
-Over the years, the computing component has grown significantly, while the transmit/receive roles have shrunk to the bare neccessities. Most recently, radars have benefited from the advances in RF components largely due to market forces communications industry. Each new technology improves performance, reduces size, weight, power, or reduces schedule and cost - and, rarely, some combination of all three. A good example is the ability to implement baseband filtering in software.
-
-Indeed, advances in computing have seen more and more of the front-end of the radar migrated into software. Functions like pulse-compression, beam-forming, filtering, that were purely hardware implementations in the past, are now almost exclusively performed in software. Of course, software is usually easier to change, upgrade and fix than hardware implementations. Similarly, the boom in wireless communications has pushed smaller and cheaper RF components that can be leveraged in radars as well.
-
-Another improvement is clock stability which has become ubiquitous and pristine. The challenges once with phase coherency, uniform sampling, and coordination across devices running indepedant operating systems with indepedant clocks have been greatly reduced with the advent of crystal oscillators. Closely related to time precision is the universal usage of GPS and positional accuracy.  Clocks
-that are already highly accurate in the short term can additionally be disciplined with a GPS pulse-per-second resulting in a global synchronization signal.
+Advances in computing have seen more and more of the front-end of the radar migrated into software. Functions like pulse-compression, beam-forming, filtering, that were purely hardware implementations in the past, are now almost exclusively performed in software. Of course, software is usually easier to change, upgrade and fix than hardware implementations. Similarly, the boom in wireless communications has pushed smaller and cheaper RF components that can be leveraged in radars as well.
 
 Every RF system that leverages computing requires an Analog-Digital Converter or Digital-Analog Converter or both. The sampling speed continues to improve and state-of-the-art systems can now sample at  about 2 GHz. The trend is pushing toward the ability to directly sample RF and do away with the traditional heterodyne receiver. The signal would go straight from an antenna/transducer, through an LNA and the ADC to the processing device, skipping the IF stage, with its mixers and filters, entirely. Of course, being able to sample up above X-band (~10 GHz) implies computing and data routing that can handle the massive bandwidth.
 
@@ -59,4 +52,8 @@ doppler, but not both. Thus, a common categorization of radars is low-, medium-,
 
 In the spectrogram, however, we see that bats use resolution in each domain where it is most advantageous. In a search mode, range resolution is not crucial, but merely a rough distance and direction are desired. Conversely, being able to resolve doppler highly, and detect minute movements at a distance is invaluable while seeking for prey. As the bat nears its prey, distance and direction become increasingly important, and movement less so. Thus, the final phase, "terminal buzzing", sees a rapid increase in PRF as the bat closes the final distance.
 
+## State of the Art
 
+Dr. Kristine Bell, along with colleagues from the Ohio State University, and funding from the Air Force Research Labs in Dayton, Ohio, have built upon previous work with software-defined platforms and cognitive radar experiments, and have demonstrated parameter optimization using a Maximum a Posteriori with Penalty Function (MAP-PF) tracker. A key characteristic of MAP-PF is constraining detections to a region predicted by the tracker. This implies a guided detection scheme where there is a heavy reliance on the model assumptions.
+
+In the experiment, a single mode was selected, that of tracking a moving object - a person in this case. Additionally, a single transmitter parameter was chosen for optimization - that of the pulse repetition frequency.
