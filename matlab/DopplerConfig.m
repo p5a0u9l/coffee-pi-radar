@@ -56,7 +56,7 @@ classdef DopplerConfig < handle
                 me.n_total = inf;
                 me.fs = 44100;
                 me.is_file = false;
-                me.wav = audiorecorder(me.fs, 16, me.i_chan, 0);
+                me.wav = audiorecorder(me.fs, 16, (me.i_chan), 3);
                 me.wav.record(2*me.Tp);
             end
             me.noise_est = [];

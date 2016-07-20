@@ -5,8 +5,9 @@ function batch_doppler_example(varargin)
     opts = containers.Map(keys, vals);
 
     fname = fullfile('..', 'reference', 'charvat_doppler', 'Off of Newton Exit 17.wav');
+    fname = 'test.wav';
     os_factor = 8; % oversample factor
-    i_chan = 2; % the channel to process
+    i_chan = 1; % the channel to process
 
     Tp = opts('Tp'); %(s) integration period
     do_animation = opts('animate');
