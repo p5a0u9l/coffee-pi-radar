@@ -7,7 +7,6 @@ classdef DopplerConfig < handle
         n_total
         n_samp
         Tp
-        fs
         oversample
         n_dwell_detect
         taper
@@ -28,7 +27,8 @@ classdef DopplerConfig < handle
         MPH_CF = 2.23694;
         FC = 2590E6; %(Hz) Center frequency (connected VCO Vtune to +5 for example)
         C_LIGHT = 3e8; %(m/s) speed of light
-
+        AUDIO_DEVICE_ID = 2;
+        FS = 44100;
         % Thresholds
         pass_thresh = 0.5; % instantaneous noise level indicating vehicle crossing
         actv_thresh = 28; % peak must be X dB above noise est
@@ -50,18 +50,17 @@ classdef DopplerConfig < handle
             if ~isempty(me.wav)
                 I = audioinfo(me.wav);
                 me.n_total = I.TotalSamples;
-                me.fs = I.SampleRate;
+                me.FS = I.SampleRate;
                 me.is_file = true;
             else
                 me.n_total = inf;
-                me.fs = 44100;
                 me.is_file = false;
-                me.wav = audiorecorder(me.fs, 16, (me.i_chan), 3);
+                me.wav = audiorecorder(me.FS, 16, (me.i_chan), me.AUDIO_DEVICE_ID);
                 me.wav.record(2*me.Tp);
             end
             me.noise_est = [];
-            me.n_samp = round(me.Tp*me.fs);
-            me.Tp = me.n_samp/me.fs;
+            me.n_samp = round(me.Tp*me.FS);
+            me.Tp = me.n_samp/me.FS;
             me.taper = window(taper_func, me.n_samp).';
             me.n_filt = me.oversample*2^nextpow2(me.n_samp);
 
@@ -75,8 +74,8 @@ classdef DopplerConfig < handle
 
             % calculate velocity
             lambda = me.C_LIGHT/me.FC;
-            df = me.fs/me.n_filt;
-            doppler = 0:df:me.fs/2 - df; % doppler spectrum
+            df = me.FS/me.n_filt;
+            doppler = 0:df:me.FS/2 - df; % doppler spectrum
             me.funcs.dop2mph = @(dop) me.MPH_CF*dop*lambda/2;
             me.funcs.mph2dop = @(mph) 2*mph/(me.MPH_CF*lambda);
             me.v_mph = me.MPH_CF*doppler*lambda/2;

@@ -85,5 +85,5 @@ end
 
 function show_state(dc, v, n0)
     fprintf('Time: %.2f\tnoise: %.2f\tpower: %.2f\tPeak: %.2f\tPassing: %d\tActive: %d\tSpeed: %0.1f\tVehicle Count: %d\n',...
-        dc.i_samp/dc.fs, dc.noise_est, n0, v, dc.state.Passing, dc.state.Active, round(dc.state.SpeedEst), dc.state.VehicleCount);
+        dc.i_samp/dc.FS, dc.noise_est, n0, v, dc.state.Passing, dc.state.Active, round(dc.state.SpeedEst), dc.state.VehicleCount);
 end
