@@ -76,39 +76,11 @@ real-time playback, peak-speed detection, and combines it with the sound file it
 
 #### Schedule
 
-- Proposal
-    o 28-Jun-16 --> Complete
-
-- Procurement
-    * Order
-        o 27-Jun-16 --> Complete
-    * Receive
-        o 04-Jul-16 --> Pending
-
-- Physical Build
-    * 05-Jul-16 --> Pending Parts
-
-- RF --> IQ Testing
-    * 12-Jul-16 --> Pending Build
-
-- "R/T" Software Development
-    * RPi initialized
-        o 05-Jul-16
-    * Buffer
-        o 19-Jul-16
-    * Frame-wise FFT
-        o 19-Jul-16
-    * Threshold Detection
-        o 26-Jul-16
-    * Report/Log
-        o 26-Jul-16
-
-- Analytic Software Development
-    * TODO
+see [Gantt Chart](report/gantt_chart.pdf)
 
 #### Bill of Materials
 
-see [bom](bom.txt)
+see [Bill of Materials](report/bom.txt)
 
 -   NOTE: Materials unique to this project are contained in the second table. For the first table, the more complete BOM in the above
 link is recommended. However, it should be noted (as I found out) that the table was compiled in 2011 and some of the part
