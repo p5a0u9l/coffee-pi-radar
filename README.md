@@ -114,3 +114,12 @@ see [bom](bom.txt)
 link is recommended. However, it should be noted (as I found out) that the table was compiled in 2011 and some of the part
 numbers are obsolete. Using the table description should hep find a suitable replacement.
 
+#### Steps
+
+1. Setting up Raspberry Pi 2
+    - Installing OS onto SD chip
+        o Chose to use Arch Linux ARM
+        o Followed instructions at https://archlinuxarm.org/platforms/armv7/broadcom/raspberry-pi-2
+        o Challenge - initially followed instructions for Raspberry Pi 1
+        o ARM architectures have less software/driver support than x_86
+
