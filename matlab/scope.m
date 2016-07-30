@@ -7,6 +7,7 @@ function scope(varargin)
     % parse input args
     args = containers.Map(varargin(1:2:end), varargin(2:2:end));
     oversample = get_arg(args, 'oversample', 2);
+    socket_ip = get_arg(args, 'socket_ip', '192.168.0.122');
     display_on = get_arg(args, 'display_on', true);
     record_on = get_arg(args, 'record_on', false);
     dwell_ms = get_arg(args, 'dwell_ms', 100);
@@ -26,7 +27,7 @@ function scope(varargin)
     dontstopcantstopwontstop = true;
 
     % init source
-    device = init_data_device(source, fs, n_bit, n_chan, T);
+    device = init_data_device(source, args, fs, n_bit, n_chan, T);
 
     w = repmat(window(window_func, n_samp_frame), 1, n_chan);
 
@@ -146,7 +147,7 @@ function val = get_arg(args, key, default)
     end
 end
 
-function dev = init_data_device(source, fs, n_bit, n_chan, T)
+function dev = init_data_device(source, args, fs, n_bit, n_chan, T)
     if strcmp(source, 'audio_card')
         device_id = 2;
         dev = audiorecorder(fs, n_bit, n_chan, device_id);
@@ -155,10 +156,12 @@ function dev = init_data_device(source, fs, n_bit, n_chan, T)
         dev = audioread('radar_data_cache.wav');
     elseif strcmp(source, 'zmq')
         % set up connection
-        tcp = 'tcp://192.168.0.122:5555';
+        tcp = sprintf('tcp://%s:5555', args('socket_ip'));
         ctx = py.zmq.Context();
         dev = ctx.socket(py.zmq.SUB);
         dev.connect(tcp);
         dev.setsockopt(py.zmq.SUBSCRIBE, '');
+    else
+        error('Unrecognized audio source')
     end
 end
