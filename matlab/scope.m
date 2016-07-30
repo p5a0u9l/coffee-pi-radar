@@ -2,7 +2,7 @@ function scope(varargin)
     % playback params
     fs = 48000;
     n_chan = 2;
-    n_bit = 16;
+    n_bit = 32;
 
     % parse input args
     args = containers.Map(varargin(1:2:end), varargin(2:2:end));
@@ -47,11 +47,11 @@ function scope(varargin)
         f_.UserData.i_chan = 1;
         uicontrol('Style', 'pushbutton', 'string',...
             'channel toggle', 'position', [10, 10, 80, 30], 'callback', @cb_chan);
-        subplot(211); l1 = plot(t*1e3, zeros(n_samp_frame, 2), '.');
+        subplot(211); l1 = plot(t*1e3, zeros(n_samp_frame, n_chan), '.-');
         xlabel('time [ms]'); ylabel('dB'); title('time view');
         ylim([-1.1, 1.1]);
         grid on;
-        subplot(212); l2 = plot(f/1e3, zeros(n_fft/2, 2), '.');
+        subplot(212); l2 = plot(f/1e3, zeros(n_fft/2, n_chan), '.-');
         xlabel('freq [kHz]'); ylabel('dB'); title('frequency view');
         ylim(dB_lim);
         grid on;
@@ -96,7 +96,9 @@ function scope(varargin)
             if display_on
                 % update spectrum
                 x = v.*w;
-                sound(v(:, 1));
+                %x(:, 1) = x(:, 1)/max(x(:, 1));
+                %x(:, 2) = x(:, 2)/max(x(:, 2));
+                %sound(v(:, 1));
                 V = fft(x, n_fft);
                 V = v2db(V(1:n_fft/2, :));
 
@@ -115,7 +117,7 @@ function scope(varargin)
                 for i = 1:size(x, 2); l1(i).YData = x(:, i);    end
                 for i = 1:size(V, 2); l2(i).YData = V(:, i);    end
                 img.CData = wf;
-                drawnow limitrate;
+                drawnow;
             end
         end
     catch e
@@ -153,7 +155,7 @@ function dev = init_data_device(source, fs, n_bit, n_chan, T)
         dev = audioread('radar_data_cache.wav');
     elseif strcmp(source, 'zmq')
         % set up connection
-        tcp = 'tcp://192.168.0.123:5555';
+        tcp = 'tcp://192.168.0.122:5555';
         ctx = py.zmq.Context();
         dev = ctx.socket(py.zmq.SUB);
         dev.connect(tcp);
