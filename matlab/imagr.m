@@ -1,4 +1,4 @@
-function im = imagr(x, varargin)
+function im = imagr(z, varargin)
 
     if nargin > 1
         args = containers.Map(varargin(1:2:end), varargin(2:2:end));
@@ -7,11 +7,14 @@ function im = imagr(x, varargin)
     end
     cm = get_arg(args, 'colormap', 'default');
     fignum = get_arg(args, 'fignum', 101);
+    xdata = get_arg(args, 'x', 1:size(z, 2));
+    ydata = get_arg(args, 'y', 1:size(z, 1));
 
     figure(fignum); clf;
-    im = imagesc(x);
+    im = imagesc(xdata, ydata, z);
     cb = colorbar();
     colormap(cm);
+    caxis([5, 30] + median(z(:)));
 
     x0 = cb.Position(1);
     dx = cb.Position(3);

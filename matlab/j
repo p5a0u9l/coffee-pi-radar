@@ -1,0 +1,20 @@
+In terms of deviating from reference design, let's review the signal chain
+
+    - Modulator Circuit
+    - VCO
+    - Tx Amplifier
+    - Cantenna1
+    - Cantenna2
+    - Rx LNA
+    - Mixer
+    - Video Amp
+    - LPF
+
+I am skipping the last two steps - Video Amp and LPF. However, I'm using a quality audio interface as well, since the USB interface wasn't working. The Focusrite (audio adapter) has both variable gain (knobs) and low-pass filtering. It's a better solution all the way around. As far as putting it in the PCB... I'm not sure why I couldn't get it to work. Could be one of three things
+
+    1. The quad op-amp got damaged or was otherwise made inoperable.
+    2. There was a mistake in the circuit
+    3. The operator (me) was doing something wrong.
+
+
+

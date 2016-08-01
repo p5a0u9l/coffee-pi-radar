@@ -2,7 +2,7 @@ function scope(varargin)
     % playback params
     fs = 48000;
     n_chan = 2;
-    n_bit = 32;
+    n_bit = 16;
 
     % parse input args
     args = containers.Map(varargin(1:2:end), varargin(2:2:end));
@@ -13,6 +13,7 @@ function scope(varargin)
     dwell_ms = get_arg(args, 'dwell_ms', 100);
     window_func = get_arg(args, 'window_func', @rectwin);
     source = get_arg(args, 'source', 'zmq');
+    record_duration = get_arg(args, 'record_duration', 10);
 
     T = dwell_ms/1000;
     dB_lim = [-0, 60];
@@ -23,7 +24,6 @@ function scope(varargin)
     nframe = floor(n_samp_frame/n_period);
     n_samp_frame = nframe*n_period;
     T = n_samp_frame/fs;
-    x_rec_data = [];
     dontstopcantstopwontstop = true;
 
     % init source
@@ -66,67 +66,66 @@ function scope(varargin)
     end
 
     % main loop
-    try
-        while dontstopcantstopwontstop
-            % update data
-            if strcmp(source, 'audio_card')
+    while dontstopcantstopwontstop
+        % update data
+        if strcmp(source, 'audio_card')
+            if record_on
+                device.recordblocking(record_duration);
+                dontstopcantstopwontstop = false;
+                fprintf('writing data to file...\n');
+                fname = sprintf('%d_%s', round(now*10000), 'radar_data_cache.wav');
+                audiowrite(fname, device.getaudiodata(), fs);
+            else
+                device.record(T);
                 while device.get('TotalSamples') < n_samp_frame; end
                 v = device.getaudiodata();
-                device.record(T);
-            elseif strcmp(source, 'wav_file')
-                v = device((1:n_samp_frame) + i_samp, :);
-                end_samp = size(device, 1);
-                i_samp = i_samp + n_samp_frame;
-                if i_samp >= end_samp - n_samp_frame
-                    dontstopcantstopwontstop = false;
-                end
-            elseif strcmp(source, 'zmq')
-                v = [];
-                for i = 1:nframe
-                    v = [v, cell2mat(cell(py.struct.unpack(sprintf('<%di', ...
-                        n_chan*n_period), device.recv())))];
-                end
-                v = double([v(1:2:end); v(2:2:end)])';
-                v = v./2^(n_bit - 1); %normalize
             end
 
-            if record_on
-                x_rec_data = [x_rec_data; v];
+        elseif strcmp(source, 'wav_file')
+            v = device((1:n_samp_frame) + i_samp, :);
+            end_samp = size(device, 1);
+            i_samp = i_samp + n_samp_frame;
+            if i_samp >= end_samp - n_samp_frame
+                dontstopcantstopwontstop = false;
             end
-
-            if display_on
-                % update spectrum
-                x = v.*w;
-                %x(:, 1) = x(:, 1)/max(x(:, 1));
-                %x(:, 2) = x(:, 2)/max(x(:, 2));
-                %sound(v(:, 1));
-                V = fft(x, n_fft);
-                V = v2db(V(1:n_fft/2, :));
-
-                % update waterfall
-                i_frame = i_frame + 1;
-                if i_frame <=  n_frame_wf_buffer
-                    idx = i_frame;
-                else
-                    idx = n_frame_wf_buffer;
-                    wf = circshift(wf, [-1, 0]);
-                end
-
-                wf(idx, :) = V(:, f_.UserData.i_chan).';
-
-                %update plots
-                for i = 1:size(x, 2); l1(i).YData = x(:, i);    end
-                for i = 1:size(V, 2); l2(i).YData = V(:, i);    end
-                img.CData = wf;
-                drawnow;
+        elseif strcmp(source, 'zmq')
+            v = [];
+            for i = 1:nframe
+                v = [v, cell2mat(cell(py.struct.unpack(sprintf('<%di', ...
+                    n_chan*n_period), device.recv())))];
             end
+            v = double([v(1:2:end); v(2:2:end)])';
+            v = v./2^(n_bit - 1); %normalize
         end
-    catch e
-        e.getReport()
-        if record_on
-            fprintf('writing data to file...\n');
-            audiowrite('radar_data_cache.wav', x_rec_data, fs);
+
+        if display_on
+            % update spectrum
+            x = v.*w;
+            %x(:, 1) = x(:, 1)/max(x(:, 1));
+            %x(:, 2) = x(:, 2)/max(x(:, 2));
+            %sound(v(:, 1));
+            V = fft(x, n_fft);
+            V = v2db(V(1:n_fft/2, :));
+
+            % update waterfall
+            i_frame = i_frame + 1;
+            if i_frame <=  n_frame_wf_buffer
+                idx = i_frame;
+            else
+                idx = n_frame_wf_buffer;
+                wf = circshift(wf, [-1, 0]);
+            end
+
+            wf(idx, :) = V(:, f_.UserData.i_chan).';
+
+            %update plots
+            for i = 1:size(x, 2); l1(i).YData = x(:, i);    end
+            for i = 1:size(V, 2); l2(i).YData = V(:, i);    end
+            img.CData = wf;
+            drawnow;
         end
+    end
+    if record_on
     end
 end
 
@@ -151,7 +150,6 @@ function dev = init_data_device(source, args, fs, n_bit, n_chan, T)
     if strcmp(source, 'audio_card')
         device_id = 2;
         dev = audiorecorder(fs, n_bit, n_chan, device_id);
-        dev.record(T);
     elseif strcmp(source, 'wav_file')
         dev = audioread('radar_data_cache.wav');
     elseif strcmp(source, 'zmq')
