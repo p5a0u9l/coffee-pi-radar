@@ -12,7 +12,7 @@
 clear;
 
 %read the raw data .wave file here
-[Y,FS] = audioread('../../references/ranging_files/running_outside_20ms.wav');
+[Y,FS] = audioread('../reference/ranging_files/running_outside_20ms.wav');
 dbv = @(x) 20*log10(abs(x));
 
 %radar parameters
