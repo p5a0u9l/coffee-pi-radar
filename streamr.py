@@ -24,8 +24,8 @@ device = sys.argv[3] # disk/sound
 
 # setup pyaudio
 pa = pyaudio.PyAudio()
-FORMAT = pyaudio.paInt16
-CHANNELS = 1
+FORMAT = pyaudio.paInt32
+CHANNELS = 2
 RATE = 48000
 
 # setup zmq
@@ -107,24 +107,3 @@ stream.close()
 # close pyaudio/zmq
 pa.terminate()
 
-def album():
-    init_zmq()
-    stream = init_stream()
-
-    for flac in flac_files:
-
-        if os.path.exists(wav_file):
-            os.remove(wav_file)
-
-        call(['ffmpeg', '-loglevel', 'quiet', '-i', flac, wav_file])
-        wav = wave.open(wav_file, 'rb')
-
-        while stream.is_active():
-            time.sleep(0.1)
-
-        # stop stream
-        stream.stop_stream()
-        stream.close()
-
-    # close pyaudio/zmq
-    pa.terminate()

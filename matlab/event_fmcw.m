@@ -1,6 +1,6 @@
 function fmcw_playback()
     % init config
-    fc = FmcwConfig('fname', '736542_radar_data_cache.wav');
+    fc = FmcwConfig('dev_type', 'zmq');
     dbv = @(x, n) 20*log10(abs(x(1:n/2)));
 
     % fetch data

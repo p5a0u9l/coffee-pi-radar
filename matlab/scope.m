@@ -88,12 +88,11 @@ function scope(varargin)
             if i_samp >= end_samp - n_samp_frame
                 dontstopcantstopwontstop = false;
             end
+
         elseif strcmp(source, 'zmq')
-            v = [];
-            for i = 1:nframe
-                v = [v, cell2mat(cell(py.struct.unpack(sprintf('<%di', ...
-                    n_chan*n_period), device.recv())))];
-            end
+            v = cell2mat(cell(py.numpy.fromstring(device.recv())));
+            dvv = dv;
+            dv = v;
             v = double([v(1:2:end); v(2:2:end)])';
             v = v./2^(n_bit - 1); %normalize
         end
@@ -163,3 +162,19 @@ function dev = init_data_device(source, args, fs, n_bit, n_chan, T)
         error('Unrecognized audio source')
     end
 end
+
+function pulse_idx = pulse_sync(x, sync_chan)
+    % perform pulse sync
+    a = x(:, sync_chan) > 0; % square wave
+    b = diff([0; a]) > 0.5; % true on rising edges
+    c = diff([0; a]) < - 0.5; % true on falling edges
+
+    rise_idx = find(b);
+    fall_idx = find(c);
+    n = min(length(rise_idx), length(fall_idx));
+    ramp_idx = fall_idx(1:n) - rise_idx(1:n);
+
+    % guaranteed shortest ramp time so we don't accidentally integrate over boundaries
+    pulse_idx = rise_idx;
+end
+
