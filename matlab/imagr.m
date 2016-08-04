@@ -42,6 +42,16 @@ function im = imagr(z, varargin)
             'position', [x0 + 1.4*dx, y0, dx, dx], ...
             'Fontweight', 'bold', 'fontsize', 14);
 
+        uicontrol('Style', 'pushbutton', 'string', 'cal',...
+            'units', 'normalized',...
+            'position', [x0 + 1.2*dx, y0 + 5*dx, dx, dx], ...
+            'callback', @cb_clim, 'tag', 'cal');
+
+        uicontrol('Style', 'pushbutton', 'string', 'Canceller',...
+            'units', 'normalized',...
+            'position', [x0 + 1.2*dx, y0 + 3*dx, dx, dx], ...
+            'callback', @cb_canc, 'tag', 'Canc');
+
         uicontrol('Style', 'pushbutton', 'string', '+', ...
             'units', 'normalized',...
             'position', [x0 + 1.2*dx, y0 + dx, dx, dx], ...
@@ -85,6 +95,8 @@ function cb_clim(src, evnt)
         new_val = cur_value + dval;
     elseif strcmp(src.Tag, 'nf_dn')
         new_val = cur_value - dval;
+    elseif strcmp(src.Tag, 'cal')
+        new_val = [3, 30] + median(src.Parent.Children(end).Children(1).CData(:));
     elseif strcmp(src.Tag, 'dr_up')
         new_val(1) = cur_value(1) - dval;
         new_val(2) = cur_value(2) + dval;
@@ -98,4 +110,8 @@ function cb_clim(src, evnt)
     end
     obj.Limits = new_val;
     caxis(new_val);
+end
+
+function cb_canc(src, ~)
+    src.Parent.Children(end).Children.UserData.Canc = ~src.Parent.Children(end).Children.UserData.Canc;
 end

@@ -19,14 +19,16 @@ dbv = @(x) 20*log10(abs(x));
 c = 3E8; %(m/s) speed of light
 Tp = 20E-3; %(s) pulse time
 N = Tp*FS; %# of samples per pulse
+c = 3E8; %(m/s) speed of light
 fstart = 2260E6; %(Hz) LFM start frequency for example
 fstop = 2590E6; %(Hz) LFM stop frequency for example
 BW = fstop-fstart; %(Hz) transmti bandwidth
-f = linspace(fstart, fstop, N/2); %instantaneous transmit frequency
-
 %range resolution
 rr = c/(2*BW);
 max_range = rr*N/2;
+R = linspace(0,max_range,zpad);
+f = linspace(fstart, fstop, N/2); %instantaneous transmit frequency
+
 
 %the input appears to be inverted
 trig = -1*Y(:,1);
@@ -74,7 +76,6 @@ figure(20);
 sif2 = sif(2:size(sif,1),:)-sif(1:size(sif,1)-1,:);
 v = ifft(sif2,zpad,2);
 S=v;
-R = linspace(0,max_range,zpad);
 for ii = 1:size(S,1)
     %S(ii,:) = S(ii,:).*R.^(3/2); %Optional: magnitude scale to range
 end
