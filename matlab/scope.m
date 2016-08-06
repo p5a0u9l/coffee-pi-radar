@@ -2,7 +2,7 @@ function scope(varargin)
     % playback params
     fs = 48000;
     n_chan = 2;
-    n_bit = 16;
+    n_bit = 32;
 
     % parse input args
     args = containers.Map(varargin(1:2:end), varargin(2:2:end));
@@ -22,7 +22,7 @@ function scope(varargin)
     n_samp_frame = T*fs;
     % update playback params
     nframe = floor(n_samp_frame/n_period);
-    n_samp_frame = nframe*n_period;
+    n_samp_frame = 1024/2;
     T = n_samp_frame/fs;
     dontstopcantstopwontstop = true;
 
@@ -90,16 +90,14 @@ function scope(varargin)
             end
 
         elseif strcmp(source, 'zmq')
-            v = cell2mat(cell(py.numpy.fromstring(device.recv())));
-            dvv = dv;
-            dv = v;
+            v = cell2mat(cell(py.numpy.fromstring(device.recv(), pyargs('dtype', py.numpy.int32)).tolist()));
             v = double([v(1:2:end); v(2:2:end)])';
             v = v./2^(n_bit - 1); %normalize
         end
 
         if display_on
             % update spectrum
-            x = v.*w;
+            x = v;
             %x(:, 1) = x(:, 1)/max(x(:, 1));
             %x(:, 2) = x(:, 2)/max(x(:, 2));
             %sound(v(:, 1));
@@ -120,7 +118,7 @@ function scope(varargin)
             %update plots
             for i = 1:size(x, 2); l1(i).YData = x(:, i);    end
             for i = 1:size(V, 2); l2(i).YData = V(:, i);    end
-            img.CData = wf;
+            % img.CData = wf;
             drawnow;
         end
     end
@@ -161,20 +159,5 @@ function dev = init_data_device(source, args, fs, n_bit, n_chan, T)
     else
         error('Unrecognized audio source')
     end
-end
-
-function pulse_idx = pulse_sync(x, sync_chan)
-    % perform pulse sync
-    a = x(:, sync_chan) > 0; % square wave
-    b = diff([0; a]) > 0.5; % true on rising edges
-    c = diff([0; a]) < - 0.5; % true on falling edges
-
-    rise_idx = find(b);
-    fall_idx = find(c);
-    n = min(length(rise_idx), length(fall_idx));
-    ramp_idx = fall_idx(1:n) - rise_idx(1:n);
-
-    % guaranteed shortest ramp time so we don't accidentally integrate over boundaries
-    pulse_idx = rise_idx;
 end
 
