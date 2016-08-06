@@ -40,7 +40,7 @@ if device == 'disk':
     if role == 'listen':
         wav = wave.open(disk_target, 'wb')
         wav.setnchannels(CHANNELS)
-        wav.setsampwidth(pa.get_sample_size(pyaudio.paInt16))
+        wav.setsampwidth(pa.get_sample_size(pyaudio.paInt32))
         wav.setframerate(RATE)
 
     elif role == 'stream':
@@ -61,6 +61,7 @@ def callback(data, frame_count, time_info, status):
             wav.writeframes(data)
 
     elif role == 'stream':
+
         if device == 'disk':
             data = wav.readframes(1024)
 
@@ -97,13 +98,14 @@ print "%sing %s %s on %s" % (role, lu[role][1], device, ip)
 
 init_zmq()
 
-while stream.is_active():
-    time.sleep(0.1)
+try:
+    while stream.is_active():
+        time.sleep(0.1)
 
-# stop stream
-stream.stop_stream()
-stream.close()
+except e:
+    # stop stream
+    stream.stop_stream()
+    stream.close()
 
-# close pyaudio/zmq
-pa.terminate()
-
+    # close pyaudio/zmq
+    pa.terminate()
