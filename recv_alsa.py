@@ -36,13 +36,13 @@ class Sync():
         self.head = []
 
     def get_edges(self, q):
-        dref = np.diff(q.ref > 0)
+        dref = np.diff(q.ref > 0) - 0.5
 
         # find indices of rising edges
-        self.edges['rise'] = np.where(dref > 0.5)[0]
+        self.edges['rise'] = np.where(dref > 0.1)[0]
 
         # find indices of falling edges
-        self.edges['fall'] = np.where(dref < -0.5)[0]
+        self.edges['fall'] = np.where(dref < -0.1)[0]
 
     def stitch(self, q):
         if self.tail:
