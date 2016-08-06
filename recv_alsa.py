@@ -131,7 +131,7 @@ class Queue():
         self.sig = np.hstack((self.sig, x[SGNL_CHAN::2]))
         self.ref = np.hstack((self.ref, x[SYNC_CHAN::2]))
 
-    def update_buff(self, new_data):
+    def update_buff(self):
         self.buff_idx += 1
         self.fetch_format()
 
