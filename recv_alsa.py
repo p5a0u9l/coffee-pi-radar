@@ -56,7 +56,7 @@ class Sync():
 
             while rise:
                 r = rise.pop()
-                self.pulses.append(q.sig[r:r+self.period)
+                self.pulses.append(q.sig[r:r+self.period])
 
     def align_edges(self, q):
         # make sure fall follows rise, save head
