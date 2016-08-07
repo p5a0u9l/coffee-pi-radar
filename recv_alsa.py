@@ -7,7 +7,6 @@ import time
 
 SYNC_CHAN = 0
 SGNL_CHAN = 1
-N_SAMP_PULS = 960 # nominal number of samples in 20 ms at 48k
 N_SAMP_BUFF = 2048 # samples in callback buffer
 FS = 48000
 T_BUFFER_MS = 200
@@ -56,7 +55,6 @@ class Sync():
             self.edges['fall'] = self.edges['fall'][0:len(self.edges['rise'])]
 
         # try stitch previous tail to current head
-        import pdb; pdb.set_trace()
         self.head = q.ref[0:head_idx]
         self.stitch(q)
         self.tail = q.ref[self.edges['fall'][-1] + 1:-1]
@@ -122,8 +120,7 @@ class Queue():
         self.ref = []
         self.sig = []
         self.raw = []
-        n = FS*T_BUFFER_MS/1000
-        self.n_buff =  np.floor(n/N_SAMP_BUFF) # samples in callback buffer
+        self.n_buff =  1
 
     def re_init(self):
         self.buff_idx = 0

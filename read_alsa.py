@@ -4,7 +4,7 @@ import pyaudio
 import zmq
 import time
 
-N_SAMP_BUFF = 2048 # samples in callback buffer
+N_SAMP_BUFF = 4*2048 # samples in callback buffer
 pa = pyaudio.PyAudio()
 
 # setup zmq
