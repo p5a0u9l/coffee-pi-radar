@@ -171,7 +171,7 @@ class Processor():
         for i in range(len(pulses)):
             self.x[i, :] = pulses[i][0:self.n_samp]
 
-        self.debug_hook(self.x, 'raw')
+        debug_hook(self.x, 'raw')
 
     def averager(self):
         self.x = np.mean(self.x, axis=0)
@@ -187,7 +187,7 @@ class Processor():
 
     def filter(self):
         self.x = np.abs(np.fft.fft(self.x, n=self.n_fft)[:, 0:self.n_fft/2])**2
-        self.debug_hook(10*np.log10(self.x), 'filt')
+        debug_hook(10*np.log10(self.x), 'filt')
 
     def detect(self):
         cfar = signal.lfilter(self.cfar_filt, 1, self.x)
