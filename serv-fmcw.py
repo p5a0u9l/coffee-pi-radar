@@ -82,6 +82,7 @@ class Sync():
 
     def get_edges(self, q):
         debug_hook(q.ref, 'clock')
+        debug_hook(q.sig, 'signal')
 
         dref = np.diff((q.ref > 0).astype(np.float))
         # find indices of rising edges
@@ -175,6 +176,7 @@ class Processor():
 
     def averager(self):
         self.x = np.mean(self.x, axis=0)
+        debug_hook(self.x, 'avg')
 
     def canceller(self):
         p = self.x[0, :]
@@ -187,7 +189,7 @@ class Processor():
 
     def filter(self):
         self.x = np.abs(np.fft.fft(self.x, n=self.n_fft)[:, 0:self.n_fft/2])**2
-        debug_hook(10*np.log10(self.x), 'filt')
+        debug_hook(self.x, 'filt')
 
     def detect(self):
         cfar = signal.lfilter(self.cfar_filt, 1, self.x)
@@ -229,7 +231,8 @@ p = Processor()
 z = Zmq()
 
 def debug_hook(data, topic):
-    z.pub.send('%s %s' % (topic, data.tostring()))
+    n_row = data.shape[0]
+    z.pub.send('%s n_row: %s;;;%s' % (topic, str(n_row), data.tostring()))
 
 def print_debug():
     global t0
