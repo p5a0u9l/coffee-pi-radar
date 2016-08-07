@@ -30,7 +30,6 @@ function fmcw_player(varargin)
     %radar parameters
     c = 3E8; %(m/s) speed of light
     N = 900; %# of samples per pulse
-    c = 3E8; %(m/s) speed of light
     fstart = 2260E6; %(Hz) LFM start frequency for example
     fstop = 2590E6; %(Hz) LFM stop frequency for example
     BW = fstop-fstart; %(Hz) transmti bandwidth
