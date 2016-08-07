@@ -6,6 +6,7 @@ import time
 
 N_SAMP_BUFF = 4*2048 # samples in callback buffer
 N_CHAN = 2
+FS = 48000
 pa = pyaudio.PyAudio()
 
 # setup zmq
@@ -25,14 +26,18 @@ class Alsa():
                 frames_per_buffer=N_SAMP_BUFF,
                 stream_callback=alsa_callback)
 
-    def loop():
-        while stream.is_active():
+    def loop(self):
+        while self.stream.is_active():
             time.sleep(0.1)
 
         # stop stream
-        stream.stop_stream()
-        stream.close()
+        self.stream.stop_stream()
+        self.stream.close()
         pa.terminate()
 
-a = Alsa()
-a.loop()
+def main():
+    a = Alsa()
+    a.loop()
+
+if __name__ == '__main__':
+    main()

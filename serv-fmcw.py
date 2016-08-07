@@ -3,7 +3,7 @@
 
 # imports
 import numpy as np
-import scipy
+from scipy import signal
 import socket
 import pyaudio
 import zmq
@@ -36,12 +36,13 @@ class Zmq():
         self.sub.setsockopt(zmq.SUBSCRIBE, 'pcm_raw')
         self.ip = socket.gethostbyname('thebes')
         tcp = "tcp://%s:%s" % (self.ip, SUB_PORT)
-        sub.connect(tcp)
+        self.sub.connect(tcp)
+        print 'Listening on %s' % tcp
 
         self.pub = self.ctx.socket(zmq.PUB)
-        tcp = "tcp://%s:%s" % (self.ip, SUB_PORT)
+        tcp = "tcp://%s:%s" % (self.ip, PUB_PORT)
         self.pub.bind(tcp)
-        print 'Listening on %s' % tcp
+        print 'Publishing on %s' % tcp
 
 class Queue():
     def __init__(self):
@@ -58,7 +59,7 @@ class Queue():
 
     def fetch_format(self):
         # fetch format data
-        x = (np.fromstring(sub.recv(), np.int32)).astype(np.float)/2**31
+        x = (np.fromstring(z.sub.recv(), np.int32)).astype(np.float)/2**31
         self.sig = np.hstack((self.sig, x[SGNL_CHAN::2]))
         self.ref = np.hstack((self.ref, x[SYNC_CHAN::2]))
 
@@ -114,8 +115,8 @@ class Sync():
         rez = np.abs(self.period - prev_period)
 
         if rez < 5:
-            print 'pulse period acquired --> %d samples' % (self.period)
             if not self.have_period:
+                print 'pulse period acquired --> %d samples' % (self.period)
                 self.have_period = True
                 self.T = self.period*FS
 
@@ -150,45 +151,59 @@ class Processor():
         self.do_cancel = True
         self.n_fft = N_FFT
         self.x = 0
-        self.cfar_filt = [1, 1, 1, 0, 0, 0, 1, 1, 1]
-        self.alpha = 9 # cfar scalar
+        self.cfar_filt = [1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1]
+        self.alpha = 0.6 # cfar scalar
         self.detects = []
         self.range_rez = C_LIGHT/(2*BW)
         self.n_samp = 0
-        self.drange = 1.0/self.n_fft/2
-        self.report = {}
+        self.report_dict = {}
+        self.range_lu = np.zeros((1, 1))
+        self.ranges = []
 
     def format(self, pulses):
         self.n_samp = min([len(p) for p in pulses])
-        self.x = np.zeros(len(pulses), self.n_samp)
-        for i in range(len(p)):
-            self.x[i, :] = pulses[i]
+        self.x = np.zeros((len(pulses), self.n_samp))
+        for i in range(len(pulses)):
+            self.x[i, :] = pulses[i][0:self.n_samp]
 
     def averager(self):
-        self.x = np.mean(self.x)
+        self.x = np.mean(self.x, axis=0)
 
     def canceller(self):
-        self.x = np.diff(self.x)
+        p = self.x[0, :]
+        for i in range(self.x.shape[0] - 1):
+            self.x[i, :] = self.x[i+1, :] - p
+            p = self.x[i+1, :]
+
+        self.x = self.x[0:self.x.shape[0] - 1, :]
+        #self.x = np.diff(self.x, axis=0)
 
     def filter(self):
-        self.x = 20*np.log10(np.abs(np.fft.fft(self.x, n=self.n_fft)[0:self.n_fft/2]))
+        self.x = np.abs(np.fft.fft(self.x, n=self.n_fft)[:, 0:self.n_fft/2])**2
 
     def detect(self):
-        cfar = scipy.signal.lfilter(self.cfar_filt, 1, self.x)
-        self.detects = np.where(self.x > self.alpha*cfar)
+        cfar = signal.lfilter(self.cfar_filt, 1, self.x)
+        self.detects = np.where(self.x > self.alpha*cfar)[0]
 
     def transform(self):
-        if self.detects.any():
-            self.ranges = self.detects*self.range_rez*self.drange
+        self.ranges = []
+        if not self.range_lu.any():
+            max_range = self.range_rez*self.n_samp/2
+            self.range_lu = np.linspace(0, max_range, self.n_fft/2)
+
+        if len(self.detects) > 0:
+            for d in self.detects:
+                self.ranges.append(self.range_lu[d])
 
     def report(self):
-        for i in self.detects:
+        self.report_dict = {}
+        for i in range(len(self.detects)):
             ts = time.time()
-            self.report[ts] = {}
-            self.report[ts]['gate'] = self.detects[i]
-            self.report[ts]['range'] = self.ranges[i]
+            self.report_dict[ts] = {}
+            self.report_dict[ts]['gate'] = self.detects[i]
+            self.report_dict[ts]['range'] = self.ranges[i]
 
-        self.report = json.dumps(self.report)
+        self.report_str = json.dumps(self.report_dict)
 
     def process_pulses(self, pulses):
         self.format(pulses)
@@ -198,19 +213,19 @@ class Processor():
         self.detect()
         self.transform()
         self.report()
-        z.pub.send('%s %s' % ('report', self.report))
-
-        global t0
-        dt = time.time() - t0
-        t0 = time.time()
-        print 'Process queue... dt is %f --> pulse count is %d' % (dt, len(s.pulses))
-
 
 # init objects
 q = Queue()
 s = Sync()
 p = Processor()
 z = Zmq()
+
+
+def print_debug():
+    global t0
+    dt = time.time() - t0
+    t0 = time.time()
+    print 'Process queue... dt: %.3f ms --> pulses: %d --> detects: %d' % (dt*1e3, len(s.pulses), len(p.report_dict))
 
 def main():
     print 'Queue and Sync initzd... Entering loop now... '
@@ -224,7 +239,10 @@ def main():
 
             if s.have_period:
                 s.extract_pulses(q.sig)
-                p.process_queue(s.pulses)
+                p.process_pulses(s.pulses)
+                z.pub.send('%s %s' % ('report', p.report_str))
+                print_debug()
+                s.pulses = [] # reset pulses
             else:
                 pass
 
