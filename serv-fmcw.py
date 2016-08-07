@@ -60,8 +60,11 @@ class Queue():
     def fetch_format(self):
         # fetch format data
         x = (np.fromstring(z.sub.recv(), np.int32)).astype(np.float)/2**31
-        self.sig = np.hstack((self.sig, x[SGNL_CHAN::2]))
-        self.ref = np.hstack((self.ref, x[SYNC_CHAN::2]))
+        self.sig = x[SGNL_CHAN::2]
+        self.ref = x[SYNC_CHAN::2]
+        debug_hook(self.ref, 'clock')
+        debug_hook(self.sig, 'signal')
+
 
     def update_buff(self):
         self.buff_idx += 1
@@ -81,9 +84,6 @@ class Sync():
         self.head = []
 
     def get_edges(self, q):
-        debug_hook(q.ref, 'clock')
-        debug_hook(q.sig, 'signal')
-
         dref = np.diff((q.ref > 0).astype(np.float))
         # find indices of rising edges
         self.edges['rise'] = np.where(dref == 1)[0]

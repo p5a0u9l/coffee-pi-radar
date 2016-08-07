@@ -1,28 +1,39 @@
 function netscope(varargin)
-    % playback params
-    fs = 48000;
-    n_bit = 32;
-    n_frame_wf_buffer = 100;
-
     % parse input args
     args = containers.Map(varargin(1:2:end), varargin(2:2:end));
-    socket_ip = get_arg(args, 'socket_ip', '192.168.0.118');
+    socket_ip = char(py.socket.gethostbyname('thebes'));
     sub_topic = get_arg(args, 'sub_topic', 'raw');
-    v2db = @(x) 20*log10(abs(x));
+    v2db = @(x) 10*log10(x);
     dev = init_data_device(socket_ip, sub_topic);
+    not_init = true;
+    i_frame = 0;
 
     % main loop
     while true
         % update data
-        v = cell2mat(cell(py.list(py.numpy.fromstring(dev.recv(), ...
-                    pyargs('dtype', py.numpy.float)))));
-        if size(v, 1) > 1
+        data = dev.recv();
+        idx = strfind(char(data), ';;;');
+        header = data(1:idx);
+        data = data(idx+3:end); % remove header
+        shape = regexp(char(header), '.*n_row: (\d+).*', 'tokens');
+        n_row = str2double(shape{1});
+        v = cell2mat(cell(py.list(py.numpy.fromstring(data))));
+        if n_row > 1 && n_row < 100
+            v = reshape(v, n_row, length(v)/n_row);
             v = mean(v, 1);
         end
+        error
+        if strcmp(sub_topic, 'filt')
+            v = v2db(v);
+        end
 
-        [wf, pl, img] = init_figures(v)
+        if not_init
+            not_init = false;
+            [wf, pl, img] = init_figures(v);
+        end
 
         % update waterfall
+
         i_frame = i_frame + 1;
         n_frame = size(wf, 1);
         if i_frame <=  n_frame
@@ -31,7 +42,7 @@ function netscope(varargin)
             idx = n_frame;
             wf = circshift(wf, [-1, 0]);
         end
-        wf(idx, :) = v;
+        wf(idx, 1:length(v)) = v;
 
         %update plots
         % caxis([3, 30] + median(wf(:)));
