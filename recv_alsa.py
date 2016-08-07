@@ -32,46 +32,34 @@ class Sync():
         self.edges = {}
         self.T = []
         self.pulses = []
-        self.tail = []
+        self.tail = np.array([0])
         self.head = []
 
     def get_edges(self, q):
-        dref = np.diff(q.ref > 0)
-
+        dref = np.diff((q.ref > 0).astype(np.float))
         # find indices of rising edges
-        self.edges['rise'] = np.where(dref > 0.5)[0]
+        self.edges['rise'] = np.where(dref == 1)[0]
 
         # find indices of falling edges
-        self.edges['fall'] = np.where(dref < -0.5)[0]
-
-    def stitch(self, q):
-        if self.tail:
-            x = np.hstack((self.tail, self.head))
-
-            # sync clock signal
-            dx = np.diff(x > 0)
-
-            # find indices of rising edges
-            rise = np.where(dx > 0.5)[0].tolist()
-
-            while rise:
-                r = rise.pop()
-                self.pulses.append(q.sig[r:r+self.period])
+        self.edges['fall'] = np.where(dref == -1)[0]
 
     def align_edges(self, q):
         # make sure fall follows rise, save head
         head_idx = np.argmax(self.edges['fall'] > self.edges['rise'][0])
-        self.edges['fall'] = self.edges['fall'][head_idx::]
+        self.edges['fall'] = self.edges['fall'][head_idx:-1]
+        head_idx = self.edges['rise'][0] - 1
 
         # make sure each vector is equi-length
-        n = min([len(self.edges['rise']), len(self.edges['fall'])])
-        self.edges['fall'] = self.edges['fall'][::n]
-        self.edges['rise'] = self.edges['rise'][::n]
+        if len(self.edges['rise']) > len(self.edges['fall']):
+            self.edges['rise'] = self.edges['rise'][0:len(self.edges['fall'])]
+        else:
+            self.edges['fall'] = self.edges['fall'][0:len(self.edges['rise'])]
 
         # try stitch previous tail to current head
-        self.head = q.ref[::head_idx]
-        self.stitch()
-        self.tail = q.ref[self.edges['fall'][-1] + 1::]
+        import pdb; pdb.set_trace()
+        self.head = q.ref[0:head_idx]
+        self.stitch(q)
+        self.tail = q.ref[self.edges['fall'][-1] + 1:-1]
 
     def check_period(self):
         if self.period:
@@ -79,12 +67,12 @@ class Sync():
         else:
             prev_period = 0
 
-        self.period = np.floor(np.mean(self.edges['fall'] - self.edges['rise']/2))
+        self.period = np.floor(np.mean(self.edges['fall'] - self.edges['rise']))
         rez = np.abs(self.period - prev_period)
 
         if rez < 5:
+            print 'pulse period acquired --> %d samples' % (self.period)
             if not self.have_period:
-                print 'pulse period acquired --> %d samples' % (period)
                 self.have_period = True
                 self.T = self.period*FS
 
@@ -92,6 +80,23 @@ class Sync():
             self.have_period = False
             self.period = []
             print 'pulse period lost. residual --> %d samples' % (rez)
+
+    def stitch(self, q):
+        if self.tail.any():
+            x = np.hstack((self.tail, self.head))
+
+            # sync clock signal
+            dx = np.diff((x > 0).astype(np.float))
+
+            # find indices of rising edges
+            rise = np.where(dx == 1)[0].tolist()
+
+            while rise:
+
+                r = rise.pop()
+                if self.period is list:
+                    import pdb; pdb.set_trace()
+                self.pulses.append(q.sig[r:r+self.period])
 
     # given a buffer of audio frames, find the pulses within the clock signal and extract received chirp
     def extract_pulses(self, sig):
@@ -105,7 +110,7 @@ def fft_mag_dB(x):
     X = np.fft.fft(x, n=n_fft)
     return 20*np.log10(np.abs(X[:n_fft/2]))
 
-def process_queue():
+def process_queue(s):
     global t0
     dt = time.time() - t0
     t0 = time.time()
@@ -151,7 +156,7 @@ while True:
         s.get_edges(q)
         s.align_edges(q)
         s.check_period()
-        if s.have_period():
+        if s.have_period:
             s.extract_pulses(q.sig)
             z = process_queue(s)
         else:
