@@ -9,12 +9,13 @@ function netscope(varargin)
     socket_ip = get_arg(args, 'socket_ip', '192.168.0.118');
     sub_topic = get_arg(args, 'sub_topic', 'raw');
     v2db = @(x) 20*log10(abs(x));
-    dev = init_data_device(socket_ip, sub_topic)
+    dev = init_data_device(socket_ip, sub_topic);
 
     % main loop
     while true
         % update data
-        v = cell2mat(cell(py.list(py.numpy.fromstring(dev.recv()))));
+        v = cell2mat(cell(py.list(py.numpy.fromstring(dev.recv(), ...
+                    pyargs('dtype', py.numpy.float)))));
         if size(v, 1) > 1
             v = mean(v, 1);
         end
@@ -53,7 +54,7 @@ function dev = init_data_device(socket_ip, sub_topic)
     ctx = py.zmq.Context();
     dev = ctx.socket(py.zmq.SUB);
     dev.connect(tcp);
-    dev.setsockopt(py.zmq.SUBSCRIBE, sub_topic);
+    dev.setsockopt(py.zmq.SUBSCRIBE, py.str(sub_topic));
 end
 
 function [pulse_idx, n_samp_pulse] = pulse_sync(x, sync_chan)

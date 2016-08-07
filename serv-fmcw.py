@@ -139,7 +139,10 @@ class Sync():
 
             while rise:
                 r = rise.pop()
-                self.pulses.append(q.sig[r:r+self.period])
+                if self.period.__class__ is list:
+                    pass
+                else:
+                    self.pulses.append(q.sig[r:r+self.period])
 
     # given a buffer of audio frames, find the pulses within the clock signal and extract received chirp
     def extract_pulses(self, sig):
