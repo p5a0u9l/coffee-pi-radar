@@ -5,7 +5,7 @@ function im = imagr(z, varargin)
     else
         args = containers.Map(1,1);
     end
-    cm = get_arg(args, 'colormap', 'default');
+    cm = get_arg(args, 'colormap', 'hot');
     fignum = get_arg(args, 'fignum', 101);
     xdata = get_arg(args, 'x', 1:size(z, 2));
     ydata = get_arg(args, 'y', 1:size(z, 1));

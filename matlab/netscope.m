@@ -1,7 +1,8 @@
 function netscope(varargin)
     % parse input args
     args = containers.Map(varargin(1:2:end), varargin(2:2:end));
-    socket_ip = char(py.socket.gethostbyname('thebes'));
+    %socket_ip =char(py.socket.gethostbyname('thebes')));
+    socket_ip = get_arg(args, 'socket_ip', 'thebes');
     sub_topic = get_arg(args, 'sub_topic', 'raw');
     v2db = @(x) 10*log10(x);
     dev = init_data_device(socket_ip, sub_topic);
@@ -19,17 +20,16 @@ function netscope(varargin)
         n_row = str2double(shape{1});
         v = cell2mat(cell(py.list(py.numpy.fromstring(data))));
         if n_row > 1 && n_row < 100
-            v = reshape(v, n_row, length(v)/n_row);
-            v = mean(v, 1);
+            v = reshape(v, length(v)/n_row, n_row);
+            v = mean(v, 2);
         end
-        error
-        if strcmp(sub_topic, 'filt')
+        if strcmp(sub_topic, 'filt') || strcmp(sub_topic, 'avg')
             v = v2db(v);
         end
 
         if not_init
             not_init = false;
-            [wf, pl, img] = init_figures(v);
+            [x, wf, pl, img] = init_figures(v);
         end
 
         % update waterfall
@@ -43,12 +43,13 @@ function netscope(varargin)
             wf = circshift(wf, [-1, 0]);
         end
         wf(idx, 1:length(v)) = v;
+        x(1:length(v)) = v;
 
         %update plots
         % caxis([3, 30] + median(wf(:)));
         img.CData = wf;
-        pl.YData = v;
-        drawnow;
+        pl.YData = x;
+        drawnow limitrate;
     end
 end
 
@@ -84,19 +85,26 @@ function [pulse_idx, n_samp_pulse] = pulse_sync(x, sync_chan)
     pulse_idx = rise_idx;
 end
 
-function [wf, pl, img] = init_figures(v)
+function [x, wf, pl, img] = init_figures(v)
     n_frame = 100;
 
     % init figures
     f1 = figure(1);
     f1.WindowStyle = 'docked';
     t = (0:length(v) - 1)/48000;
-    pl = plot(t, v, '.-');
+    x = zeros(length(t), 1);
+    pl = plot(t*1000, v, '.-');
+    grid on;
+    xlabel('time [ms]')
 
     f2 = figure(2);
     f2.WindowStyle = 'docked';
     wf = zeros(n_frame, length(v));
     wf(1, :) = v;
     img = imagesc(wf);
+    colorbar; colormap hot;
+    xlabel('sample')
+    ylabel('time')
+    %caxis([-20, 20])
 
 end
