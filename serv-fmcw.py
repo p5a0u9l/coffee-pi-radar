@@ -3,7 +3,7 @@
 
 # imports
 import numpy as np
-from scipy import signal
+from scipy.signal import lfilter, butter
 import socket
 import pyaudio
 import zmq
@@ -20,7 +20,6 @@ N_CHAN = 2
 N_SAMP_BUFF_APPROX = 1000 # samples in callback buffer
 N_FFT = 2048
 FS = 48000
-T_BUFFER_MS = 200
 SUB_PORT = 5555
 PUB_PORT = 5556
 
@@ -51,6 +50,7 @@ class Queue():
         self.sig = []
         self.raw = []
         self.n_buff =  1
+        self.time = []
 
     def re_init(self):
         self.buff_idx = 0
@@ -59,12 +59,16 @@ class Queue():
 
     def fetch_format(self):
         # fetch format data
-        x = (np.fromstring(z.sub.recv(), np.int32)).astype(np.float)/2**31
+        data = z.sub.recv()
+        idx = data[0:100].find(';;;')
+        header = data[0:idx]
+        self.time = float(header[header.find(':')+1:header.find(';;;')])
+        #import pdb; pdb.set_trace()
+        x = (np.fromstring(data[idx+3::], np.int32)).astype(np.float)/2**31
         self.sig = x[SGNL_CHAN::2]
         self.ref = x[SYNC_CHAN::2]
         debug_hook(self.ref, 'clock')
         debug_hook(self.sig, 'signal')
-
 
     def update_buff(self):
         self.buff_idx += 1
@@ -165,6 +169,11 @@ class Processor():
         self.report_dict = {}
         self.range_lu = np.zeros((1, 1))
         self.ranges = []
+        self.lpf_b, self.lpf_a = butter(6, 15e3, 'low', analog=True)
+        self.prior = 0
+
+    def lowpass(self):
+        self.x = lfilter(self.lpf_b, self.lpf_a, self.x, axis=0)
 
     def format(self, pulses):
         self.n_samp = min([len(p) for p in pulses])
@@ -179,21 +188,25 @@ class Processor():
         debug_hook(self.x, 'avg')
 
     def canceller(self):
-        p = self.x[0, :]
+        if not self.prior.__class__ is int:
+            nsamp = min([len(self.prior), self.x.shape[1]])
+        else:
+            nsamp = self.x.shape[1]
+            self.prior = np.zeros((1, nsamp))
+
         for i in range(self.x.shape[0] - 1):
-            self.x[i, :] = self.x[i+1, :] - p
-            p = self.x[i+1, :]
+            self.x[i, 0:nsamp] = self.x[i+1, 0:nsamp] - self.prior[0:nsamp]
+            self.prior = self.x[i+1, 0:nsamp]
 
         self.x = self.x[0:self.x.shape[0] - 1, :]
-        #self.x = np.diff(self.x, axis=0)
 
     def filter(self):
         self.x = np.abs(np.fft.fft(self.x, n=self.n_fft)[:, 0:self.n_fft/2])**2
         debug_hook(self.x, 'filt')
 
     def detect(self):
-        cfar = signal.lfilter(self.cfar_filt, 1, self.x)
-        self.detects = np.where(self.x > self.alpha*cfar)[0]
+        #cfar = signal.lfilter(self.cfar_filt, 1, self.x)
+        self.detects = [np.argmax(self.x)]
 
     def transform(self):
         self.ranges = []
@@ -217,6 +230,7 @@ class Processor():
 
     def process_pulses(self, pulses):
         self.format(pulses)
+        #self.lowpass()
         self.canceller()
         self.filter()
         self.averager()
@@ -236,9 +250,9 @@ def debug_hook(data, topic):
 
 def print_debug():
     global t0
-    dt = time.time() - t0
-    t0 = time.time()
-    print 'Process queue... dt: %.3f ms --> pulses: %d --> detects: %d' % (dt*1e3, len(s.pulses), len(p.report_dict))
+    dt = q.time - t0
+    t0 = q.time
+    print 'time: %.3f --> dt: %.3f ms --> pulses: %d --> samp: %d --> detect: %d m' % (t0, dt*1e3, len(s.pulses), s.period, p.ranges[0])
 
 def main():
     print 'Queue and Sync initzd... Entering loop now... '

@@ -4,7 +4,7 @@ import pyaudio
 import zmq
 import time
 
-N_SAMP_BUFF = 4*2048 # samples in callback buffer
+N_SAMP_BUFF = 8*1027 # samples in callback buffer
 N_CHAN = 2
 FS = 48000
 pa = pyaudio.PyAudio()
@@ -16,7 +16,7 @@ tcp = "tcp://%s:5555" % socket.gethostbyname('thebes')
 pub.bind(tcp)
 
 def alsa_callback(data, frames, time, status):
-    pub.send('%s %s' % ('pcm_raw', data))
+    pub.send('%s %s;;;%s' % ('pcm_raw', 'time:%f' % (time['current_time']), data))
     return (data, pyaudio.paContinue)
 
 class Alsa():
