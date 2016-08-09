@@ -9,6 +9,7 @@ import pyaudio
 import zmq
 import time
 import json
+import sdnotify
 
 # constants
 M2FT = 3.28084
@@ -24,6 +25,7 @@ SUB_PORT = 5555
 PUB_PORT = 5556
 
 pa = pyaudio.PyAudio()
+n = sdnotify.SystemdNotifier()
 
 t0 = time.time()
 
@@ -170,7 +172,7 @@ class Processor():
         self.range_lu = np.zeros((1, 1))
         self.ranges = []
         self.lpf_b, self.lpf_a = butter(6, 15e3, 'low', analog=True)
-        self.prior = 0
+        self.prior = []
 
     def lowpass(self):
         self.x = lfilter(self.lpf_b, self.lpf_a, self.x, axis=0)
@@ -188,17 +190,21 @@ class Processor():
         debug_hook(self.x, 'avg')
 
     def canceller(self):
-        if not self.prior.__class__ is int:
+        if len(self.prior) > 0:
             nsamp = min([len(self.prior), self.x.shape[1]])
         else:
             nsamp = self.x.shape[1]
-            self.prior = np.zeros((1, nsamp))
+            self.prior = np.zeros(nsamp)
 
-        for i in range(self.x.shape[0] - 1):
-            self.x[i, 0:nsamp] = self.x[i+1, 0:nsamp] - self.prior[0:nsamp]
-            self.prior = self.x[i+1, 0:nsamp]
+        tmp = self.x[0, 0:nsamp] - self.prior[0:nsamp]
+        self.prior = self.x[0, 0:nsamp]
+        dx = np.diff(self.x[:, 0:nsamp], axis=0)
+        self.x = np.vstack((tmp, dx))
 
-        self.x = self.x[0:self.x.shape[0] - 1, :]
+        # 0/-1, 1/0
+        # for i in range(self.x.shape[0]-1):
+            # self.x[i, 0:nsamp] = self.x[i+1, 0:nsamp] - self.x[i, 0:nsamp]
+
 
     def filter(self):
         self.x = np.abs(np.fft.fft(self.x, n=self.n_fft)[:, 0:self.n_fft/2])**2
@@ -206,7 +212,7 @@ class Processor():
 
     def detect(self):
         #cfar = signal.lfilter(self.cfar_filt, 1, self.x)
-        self.detects = [np.argmax(self.x)]
+        self.detects = [np.argmax(self.x[50:-1]) + 50]
 
     def transform(self):
         self.ranges = []
@@ -257,6 +263,7 @@ def print_debug():
 def main():
     print 'Queue and Sync initzd... Entering loop now... '
     while True:
+        n.notify('WATCHDOG=1')
         q.update_buff()
 
         if q.is_full():

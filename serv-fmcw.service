@@ -1,0 +1,18 @@
+[Unit]
+Description=my fmcw server wrapper
+After=serv-alsa.service jackd.service
+Requires=jackd.service serv-alsa.service
+
+[Service]
+Environment=PYTHONBUFFERED=true
+ExecStart=/usr/bin/python2 /home/paul/ee542/serv-fmcw.py
+Type=simple
+Restart=always
+RestartSec=5
+WatchdogSec=10
+User=paul
+
+[Install]
+WantedBy=multi-user.target
+
+
