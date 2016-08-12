@@ -212,7 +212,7 @@ class Processor():
         self.prior = self.x[i, :]
 
     def filter(self):
-        self.x = np.abs(np.fft.fft(self.x, n=self.n_fft)[:, 0:self.n_fft/2])**2
+        self.x = np.abs(np.fft.ifft(self.x, n=self.n_fft)[:, 0:self.n_fft/2])**2
         debug_hook(self.x, 'filt')
 
     def detect(self):
@@ -248,7 +248,7 @@ class Processor():
             self.string = ''
 
     def process_pulses(self, pulses):
-        self.format(pulses)
+        self.reshape(pulses)
         #self.lowpass()
         #self.canceller()
         self.filter()
