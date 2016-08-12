@@ -3,11 +3,10 @@ Description=my jackd management wrapper
 Before=serv-alsa.service serv-fmcw.service
 
 [Service]
-ExecStart=/usr/bin/jackd -P70 -p16 -t2000 -d alsa -p 128 -n 3 -r 48000 -s &
+ExecStart=/usr/bin/jackd -P70 -p16 -t2000 -d alsa -d hw:0 -p 128 -n 3 -r 48000 -s
 Type=simple
 Restart=always
-RestartSec=1
-User=paul
+RestartSec=15s
 
 [Install]
 WantedBy=multi-user.target

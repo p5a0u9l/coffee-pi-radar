@@ -8,9 +8,7 @@ Environment=PYTHONBUFFERED=true
 ExecStart=/usr/bin/python2 /home/paul/ee542/serv-fmcw.py
 Type=simple
 Restart=always
-RestartSec=5
-WatchdogSec=10
-User=paul
+RestartSec=15s
 
 [Install]
 WantedBy=multi-user.target

@@ -3,16 +3,13 @@ Description=my alsa server wrapper
 After=jackd.service
 Before=serv-fmcw.service
 Requires=jackd.service
-ReloadPropagatedFrom=jackd.service serv-fmcw.service
 
 [Service]
 Environment=PYTHONBUFFERED=true
 ExecStart=/usr/bin/python2 /home/paul/ee542/serv-alsa.py
 Type=simple
 Restart=always
-RestartSec=3
-WatchdogSec=10
-User=paul
+RestartSec=15s
 
 [Install]
 WantedBy=multi-user.target

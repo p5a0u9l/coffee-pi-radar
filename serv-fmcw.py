@@ -9,7 +9,6 @@ import pyaudio
 import zmq
 import time
 import json
-import sdnotify
 
 # constants
 M2FT = 3.28084
@@ -19,15 +18,13 @@ SYNC_CHAN = 0
 SGNL_CHAN = 1
 N_CHAN = 2
 N_SAMP_BUFF_APPROX = 1000 # samples in callback buffer
-N_FFT = 2048
+N_FFT = 4096
 FS = 48000
 SUB_PORT = 5555
 PUB_PORT = 5556
+MAX_PERIOD_DELTA = 50
 
 pa = pyaudio.PyAudio()
-n = sdnotify.SystemdNotifier()
-
-t0 = time.time()
 
 class Zmq():
     def __init__(self):
@@ -85,9 +82,10 @@ class Sync():
         self.period = []
         self.edges = {}
         self.T = []
-        self.pulses = []
+        self.pulses ={}
         self.tail = np.array([0])
         self.head = []
+        self.stable_period_count = 0
 
     def get_edges(self, q):
         dref = np.diff((q.ref > 0).astype(np.float))
@@ -123,13 +121,15 @@ class Sync():
         self.period = np.floor(np.mean(self.edges['fall'] - self.edges['rise']))
         rez = np.abs(self.period - prev_period)
 
-        if rez < 5:
+        if rez < MAX_PERIOD_DELTA:
+            self.stable_period_count += 1
             if not self.have_period:
                 print 'pulse period acquired --> %d samples' % (self.period)
                 self.have_period = True
                 self.T = self.period*FS
 
         elif self.have_period:
+            self.stable_period_count = 0
             self.have_period = False
             self.period = []
             print 'pulse period lost. residual --> %d samples' % (rez)
@@ -145,18 +145,20 @@ class Sync():
             rise = np.where(dx == 1)[0].tolist()
 
             while rise:
-                r = rise.pop()
+                r = rise.pop(0)
                 if self.period.__class__ is list:
                     pass
                 else:
-                    self.pulses.append(q.sig[r:r+self.period])
+                    ts = float(r)/self.period*(q.time - 0.180)
+                    self.pulses[ts] = q.sig[r:r+self.period]
 
     # given a buffer of audio frames, find the pulses within the clock signal and extract received chirp
     def extract_pulses(self, sig):
         rises = self.edges['rise'].tolist()
         while rises:
-            idx = rises.pop()
-            self.pulses.append(sig[idx:idx+self.period])
+            idx = rises.pop(0)
+            ts = float(idx)/self.period*q.time
+            self.pulses[ts] = sig[idx:idx + self.period]
 
 class Processor():
     def __init__(self):
@@ -171,17 +173,22 @@ class Processor():
         self.report_dict = {}
         self.range_lu = np.zeros((1, 1))
         self.ranges = []
-        self.lpf_b, self.lpf_a = butter(6, 15e3, 'low', analog=True)
+        self.lpf_b = np.fromfile('/home/paul/ee542/lpf.npy')
         self.prior = []
+        self.string = ''
+        self.t0 = 0
 
     def lowpass(self):
-        self.x = lfilter(self.lpf_b, self.lpf_a, self.x, axis=0)
+        self.x = lfilter(self.lpf_b, 1, self.x, axis=1)
 
     def format(self, pulses):
-        self.n_samp = min([len(p) for p in pulses])
-        self.x = np.zeros((len(pulses), self.n_samp))
-        for i in range(len(pulses)):
-            self.x[i, :] = pulses[i][0:self.n_samp]
+        #import pdb; pdb.set_trace()
+        self.n_samp = min([len(p) for p in pulses.values()])
+        self.x = np.zeros((len(pulses) , self.n_samp))
+        k = pulses.keys()
+        k.sort()
+        for i, j in enumerate(k):
+            self.x[i, :] = pulses[j][0:self.n_samp]
 
         debug_hook(self.x, 'raw')
 
@@ -196,15 +203,13 @@ class Processor():
             nsamp = self.x.shape[1]
             self.prior = np.zeros(nsamp)
 
-        tmp = self.x[0, 0:nsamp] - self.prior[0:nsamp]
-        self.prior = self.x[0, 0:nsamp]
-        dx = np.diff(self.x[:, 0:nsamp], axis=0)
-        self.x = np.vstack((tmp, dx))
+        self.x = self.x[:, 0:nsamp]
+        y = self.x.copy()
+        self.x[0, :] -= self.prior[0:nsamp]
+        for i in range(1, self.x.shape[0]):
+            self.x[i, :] -= y[i-1, :]
 
-        # 0/-1, 1/0
-        # for i in range(self.x.shape[0]-1):
-            # self.x[i, 0:nsamp] = self.x[i+1, 0:nsamp] - self.x[i, 0:nsamp]
-
+        self.prior = self.x[i, :]
 
     def filter(self):
         self.x = np.abs(np.fft.fft(self.x, n=self.n_fft)[:, 0:self.n_fft/2])**2
@@ -234,10 +239,18 @@ class Processor():
 
         self.report_str = json.dumps(self.report_dict)
 
+    def print_debug(self, doit):
+        dt = q.time - self.t0
+        self.t0 = q.time
+        self.string += 'time: %.3f -> dt: %.3f ms -> pulses: %d -> samp: %d stable -> %d -> detect: %d m\n' % (self.t0, dt*1e3, len(s.pulses), s.period, s.stable_period_count, p.ranges[0])
+        if doit:
+            print self.string,
+            self.string = ''
+
     def process_pulses(self, pulses):
         self.format(pulses)
         #self.lowpass()
-        self.canceller()
+        #self.canceller()
         self.filter()
         self.averager()
         self.detect()
@@ -254,16 +267,11 @@ def debug_hook(data, topic):
     n_row = data.shape[0]
     z.pub.send('%s n_row: %s;;;%s' % (topic, str(n_row), data.tostring()))
 
-def print_debug():
-    global t0
-    dt = q.time - t0
-    t0 = q.time
-    print 'time: %.3f --> dt: %.3f ms --> pulses: %d --> samp: %d --> detect: %d m' % (t0, dt*1e3, len(s.pulses), s.period, p.ranges[0])
-
 def main():
     print 'Queue and Sync initzd... Entering loop now... '
+    i = 0
     while True:
-        n.notify('WATCHDOG=1')
+        i += 1
         q.update_buff()
 
         if q.is_full():
@@ -275,8 +283,8 @@ def main():
                 s.extract_pulses(q.sig)
                 p.process_pulses(s.pulses)
                 z.pub.send('%s %s' % ('report', p.report_str))
-                print_debug()
-                s.pulses = [] # reset pulses
+                p.print_debug(i % 5 == 0)
+                s.pulses = {} # reset pulses
             else:
                 pass
 

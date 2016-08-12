@@ -3,13 +3,11 @@ import socket
 import pyaudio
 import zmq
 import time
-import sdnotify
 
-N_SAMP_BUFF = 8*1027 # samples in callback buffer
+N_SAMP_BUFF = 8*1082 # samples in callback buffer
 N_CHAN = 2
 FS = 48000
 pa = pyaudio.PyAudio()
-n = sdnotify.SystemdNotifier()
 
 # setup zmq
 ctx = zmq.Context()
@@ -31,7 +29,6 @@ class Alsa():
     def loop(self):
         while self.stream.is_active():
             time.sleep(0.1)
-            n.notify('WATCHDOG=1')
 
         # stop stream
         self.stream.stop_stream()

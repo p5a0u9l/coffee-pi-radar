@@ -1,0 +1,12 @@
+[Unit]
+Description=my eth0 config
+
+[Service]
+ExecStart=/usr/bin/sh /home/paul/ee542/eth0-startup.sh
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
+
+
+
