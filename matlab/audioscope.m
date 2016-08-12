@@ -1,3 +1,6 @@
+% filename: audioscope.m
+% author: Paul Adams
+%
 function scope(varargin)
     % playback params
     fs = 48000;

@@ -1,4 +1,7 @@
 #!/bin/bash
+# file: eth0-startup.sh
+# author: Paul Adams
+
 carrier_state=$(</sys/class/net/eth0/carrier)
 not_up=1
 

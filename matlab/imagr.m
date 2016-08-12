@@ -1,5 +1,7 @@
+% filename: imagr.m
+% author: Paul Adams
+%
 function im = imagr(z, varargin)
-
     if nargin > 1
         args = containers.Map(varargin(1:2:end), varargin(2:2:end));
     else

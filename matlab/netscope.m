@@ -1,3 +1,6 @@
+% filename: netscope.m
+% author: Paul Adams
+
 function netscope(varargin)
     % parse input args
     args = containers.Map(varargin(1:2:end), varargin(2:2:end));

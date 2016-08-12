@@ -28,8 +28,8 @@ The design procedure relied on having the reference design as a starting point, 
 
 ### System Description
 #### Specification of the public interface
-##### Inputs → Lincoln
-##### Outputs → Paul
+##### Inputs
+##### Outputs
 The Raspberry Pi does have the capability of running a desktop environment with graphics in order to display results, yet the overhead is significant and so the decision was made leave the Pi running in a headless manner and offload the resulting data over a local network to the development laptop for display. For test and debugging purposes, it was desirable to have the ability to visualize the data as it progressed throught the processing chain. The system output interface is visualized below.
 
 ![output interface](figs/pi_zmq_laptop_interface.png)
@@ -67,11 +67,13 @@ However, in order to handle the unexpected, three `systemd` unit modules were wr
 
 This framework also enables handling the third failure mode where the kernel scheduling causes the audio server to fall behind resulting in audio discontinuities. In this case, the audio server, which is implemented using the third-party Jack library with ALSA as the device backend, is controlled by a custom `systemd` service which stops and restarts the server in the case where errors occurs due to overruns.
 
-#### Hardware Implementation → Lincoln
+#### Hardware Implementation
+
 
 #### Software Implementation
 
 
+\newpage
 ## Code Listings
 
 ### Matlab Visualization Tools
@@ -79,6 +81,7 @@ This framework also enables handling the third failure mode where the kernel sch
 \inputminted{matlab}{matlab/audioscope.m}
 \inputminted{matlab}{matlab/imagr.m}
 
+\newpage
 ### Matlab Algorithm Protyping
 \inputminted{matlab}{matlab/batch_fmcw_detection.m}
 \inputminted{matlab}{matlab/DopplerConfig.m}
@@ -86,7 +89,16 @@ This framework also enables handling the third failure mode where the kernel sch
 \inputminted{matlab}{matlab/run_event_doppler.m}
 \inputminted{matlab}{matlab/event_doppler.m}
 
+\newpage
 ### Python Main Programs
 \inputminted{python}{serv-alsa.py}
 \inputminted{python}{serv-fmcw.py}
 
+\newpage
+### Shell Scripts and systemd Modules
+\inputminted{bash}{eth0-startup.sh}
+\inputminted{bash}{kill-all.sh}
+\inputminted{bash}{start-all.sh}
+\inputminted{bash}{jackd.service}
+\inputminted{bash}{serv-fmcw.service}
+\inputminted{bash}{serv-alsa.service}

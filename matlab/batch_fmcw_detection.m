@@ -1,3 +1,6 @@
+% filename: batch_fmcw_detection.m
+% author: Paul Adams
+%
 function x = batch_fmcw_detection(varargin)
     % init and params
     dbv = @(x) 20*log10(abs(x));

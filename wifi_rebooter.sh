@@ -1,4 +1,5 @@
 #!/bin/bash
+# file: wifi_rebooter.sh
 
 # The IP for the server you wish to ping (8.8.8.8 is a public Google DNS server)
 SERVER=8.8.8.8

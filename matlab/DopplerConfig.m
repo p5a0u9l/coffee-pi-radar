@@ -1,3 +1,6 @@
+% filename: DopplerConfig.m
+% author: Paul Adams
+
 classdef DopplerConfig < handle
     properties
         ax

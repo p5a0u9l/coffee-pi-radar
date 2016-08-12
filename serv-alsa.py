@@ -1,4 +1,8 @@
 #!/usr/bin/python2
+# -*- coding: utf-8 -*-
+# __file__ serv-alsa.py
+# __author__ Paul Adams
+
 import socket
 import pyaudio
 import zmq

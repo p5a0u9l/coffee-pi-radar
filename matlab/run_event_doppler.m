@@ -1,3 +1,6 @@
+% filename: run_event_doppler.m
+% author: Paul Adams
+%
 % Script to setup and run event_doppler
 
 clear DopplerConfig;

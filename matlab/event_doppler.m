@@ -1,3 +1,6 @@
+% filename: event_doppler.m
+% author: Paul Adams
+%
 function dc = event_doppler(varargin)
     % config
     args = containers.Map(varargin(1:2:end), varargin(2:2:end));

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+pandoc -o $1.pdf $1.md --template=/Users/paul/.pandoc/default.latex --latex-engine-opt=-shell-escape
+open -a /Applications/Google\ Chrome.app $1.pdf
+

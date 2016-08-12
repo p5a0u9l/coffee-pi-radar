@@ -1,3 +1,6 @@
+% filename: batch_doppler_example.m
+% author: Paul Adams
+%
 function batch_doppler_example(varargin)
     % config
     keys = varargin(1:2:end);
