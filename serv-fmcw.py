@@ -175,7 +175,7 @@ class Processor():
     def lowpass(self):
         self.x = lfilter(self.lpf_b, self.lpf_a, self.x, axis=0)
 
-    def format(self, pulses):
+    def reshape(self, pulses):
         self.n_samp = min([len(p) for p in pulses])
         self.x = np.zeros((len(pulses), self.n_samp))
         for i in range(len(pulses)):
@@ -201,7 +201,7 @@ class Processor():
         self.x = self.x[0:self.x.shape[0] - 1, :]
 
     def filter(self):
-        self.x = np.abs(np.fft.fft(self.x, n=self.n_fft)[:, 0:self.n_fft/2])**2
+        self.x = np.abs(np.fft.ifft(self.x, n=self.n_fft)[:, 0:self.n_fft/2])**2
         debug_hook(self.x, 'filt')
 
     def detect(self):
@@ -229,7 +229,7 @@ class Processor():
         self.report_str = json.dumps(self.report_dict)
 
     def process_pulses(self, pulses):
-        self.format(pulses)
+        self.reshape(pulses)
         #self.lowpass()
         self.canceller()
         self.filter()
