@@ -11,6 +11,6 @@ ping -c2 ${SERVER} > /dev/null
 if [ $? != 0 ]
 then
     # Restart the wireless interface
-    ifdown --force wlan0
-    ifup wlan0
+    sudo ip link set down wlan0
+    sudo ip link set up wlan0
 fi
