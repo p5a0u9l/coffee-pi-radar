@@ -3,21 +3,27 @@
 # __file__ serv-alsa.py
 # __author__ Paul Adams
 
+# third-party imports
 import socket
 import pyaudio
 import zmq
 import time
+import sys
 
-N_SAMP_BUFF = 8*1082 # samples in callback buffer
+# local imports
+N_SAMP = int(sys.argv[1])
+N_SAMP_BUFF = 6*N_SAMP
 N_CHAN = 2
 FS = 48000
+PUB_PORT = 5555
 pa = pyaudio.PyAudio()
 
 # setup zmq
 ctx = zmq.Context()
 pub = ctx.socket(zmq.PUB)
-tcp = "tcp://%s:5555" % socket.gethostbyname('thebes')
+tcp = "tcp://%s:%s" % (socket.gethostbyname('thebes'), PUB_PORT)
 pub.bind(tcp)
+print 'ALSA: Publishing on %s' % tcp
 
 def alsa_callback(data, frames, time, status):
     pub.send('%s %s;;;%s' % ('pcm_raw', 'time:%f' % (time['current_time']), data))
@@ -32,7 +38,7 @@ class Alsa():
 
     def loop(self):
         while self.stream.is_active():
-            time.sleep(0.1)
+            time.sleep(0.01)
 
         # stop stream
         self.stream.stop_stream()

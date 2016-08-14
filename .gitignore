@@ -1,4 +1,5 @@
 *.avi
 *.mat
 *.wav
+*.pyc
 _minted-input/
