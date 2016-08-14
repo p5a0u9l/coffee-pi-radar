@@ -22,11 +22,8 @@ function netscope(varargin)
         data = data(idx+3:end); % remove header
         shape = regexp(char(header), '.*n_row: (\d+).*', 'tokens');
         n_row = str2double(shape{1});
-        if n_row > 10
-            n_row = 1;
-        end
         v = cell2mat(cell(py.list(py.numpy.fromstring(data))));
-        v = reshape(v, length(v)/n_row, n_row).';
+        v = reshape(v, length(v)/n_row, n_row);
 
         if strcmp(sub_topic, 'filt') || strcmp(sub_topic, 'avg')
             v = v2db(v);
@@ -34,7 +31,7 @@ function netscope(varargin)
 
         if not_init
             not_init = false;
-            [x, wf, pl, img] = init_figures(v);
+            [x, wf, pl, img] = init_figures(v.');
             n_frame = size(wf, 1);
         end
 
@@ -47,16 +44,16 @@ function netscope(varargin)
             wf = circshift(wf, [-n_row, 0]);
         end
         wf((0:n_row - 1) + idx, 1:length(v)) = v;
-        x(1:n_row, 1:length(v)) = v;
+        x(1:length(v), 1:n_row) = v;
 
         %update plots
         %caxis([6, 30] + median(wf(:)));
         img.CData = wf;
         if length(pl(1).YData) < length(x)
-            [x, wf, pl, img] = init_figures(v);
+            [x, wf, pl, img] = init_figures(v.');
         end
         for i = 1:n_row
-            pl(i).YData = x(i, :);
+            pl(i).YData = x(:, i);
         end
         drawnow;
     end
@@ -79,13 +76,13 @@ function dev = init_data_device(socket_ip, sub_topic)
 end
 
 function [x, wf, pl, img] = init_figures(v)
-    n_frame = 500;
+    n_frame = 100;
 
     % init figures
     f1 = figure(1);
     f1.WindowStyle = 'docked';
     t = (0:length(v) - 1)/48000;
-    x = zeros(length(t), size(v, 1))';
+    x = zeros(length(t), size(v, 1));
     pl = plot(t*1000, v, '.-');
     grid on;
     xlabel('time [ms]')
@@ -93,7 +90,7 @@ function [x, wf, pl, img] = init_figures(v)
     f2 = figure(2);
     f2.WindowStyle = 'docked';
     wf = zeros(n_frame, length(v));
-
+    if ~isrow(v); v = v'; end
     wf((0:size(v, 1) - 1) + 1, :) = v;
     %img = imagr(wf, 'fignum', 5);
     img = imagesc(wf);

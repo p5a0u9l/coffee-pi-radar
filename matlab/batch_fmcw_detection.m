@@ -44,9 +44,6 @@ function x = batch_fmcw_detection(varargin)
     max_range = rr*n_samp_pulse/2;
     r = linspace(0, max_range, n_fft);
 
-    % perform pulse compression
-    % x(:, signal_chan) = filter(pulse_proto-0.5, 1, x(:, signal_chan));
-
     % form pulse matrix (optionally detrend)
     y = zeros(n_pulse, n_samp_pulse);
     for i = 1:n_pulse
