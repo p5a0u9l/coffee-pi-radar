@@ -2,13 +2,13 @@
 ## Introduction
 This project began as a conceived innovation to the MIT Coffee Can Radar [1], hereafter referred to as the reference design. The reference design demonstrated three different radar modes - Continuous-Wave (CW) Doppler, Frequency Modulated CW, and crude Synthetica Aperture Radar (SAR) - with minor hardware adjustments and using different processing algorithms. The system was interfaced with a laptop in order to acquire a block of data and then process the data offline and show results in Matlab. A block diagram is shown for reference.
 
-![mit_block_diagram](figs/push.png)
+![MIT Coffee Can Radar Block Diagram](figs/ref_design_block.png)
 
 Our goal was to implement two of these modes using streaming processing and human-in-the-loop mode switching, thus demonstrating a Software-Defined Radar (SDR) system. This project could be extended to interface the control software with waveform tuning hardware and demonstrate Cognitive Radar (CR).
 
 Our initial innovation to the reference design was to design hardware improvements and add a real-time control loop with network offloading of results. The control portion was chosen to be implemented on a Raspberry Pi 2 running Arch Linux for ARM whereas the reference design interfaced with a laptop and used offline batch-mode processing. The modified high-level design is shown below for reference.
 
-![our_block_diagram](figs/push.png)
+![SDR Block Diagram](figs/block_diagram.png)
 
 ## Discussion of Project
 ### Design Procedure
@@ -18,13 +18,13 @@ The SDR design can be summarized into two components: 1. The design improvements
 #### Software Design
 The reference design provided Matlab scripts for ingesting a block of audio data and then processing to show results. There was no detection or tracking software included in this reference and neither did we attempt to develop sophisticated detection or tracking software. Rather, the data can be transformed and displayed as an image, which then allows the eye to perform the job of a target detector/tracker system.
 
-Initial design began with experimenting with and rewriting the reference Matlab code to handle processing the data as a stream and displaying the results in a waterfall plot. This process was repeated for each of the two radar modes - Doppler and FMCW. These Matlab prototypes then became the reference point for developing Python on the Pi.
+Initial design began with experimenting and rewriting the reference Matlab code to handle processing the data as a stream and displaying the results in an animated waterfall image. This process was repeated for each of the two radar modes - Doppler and FMCW. These Matlab prototypes then became the reference point for developing Python on the Pi.
 
-This process naturally led to the development of two tools which became essential throughout the development - software audio oscilliscope that plugged into various source data formats. Eventually this settled into one program used to pull various results from the Pi to my macbook and display the data in real-time on the laptop. The second program is similar except that is fetches data from either the disk or the sound card and performs some processing and then displays those results in a streaming fashion.
+This process naturally led to the development of two tools which became essential throughout the development - software audio oscilliscopes that plugged into various source data formats. Eventually this settled into one program used to pull various results from the Pi to the development laptop and display the data in real-time in Matlab figures. The second program is similar except that is fetches data from either the disk or the sound card and performs some processing and then displays those results in a streaming fashion.
 
 Finally, algorithms were migrated to Python on the Linux system and development proceeded over remote shell only. During this phase, publishing results to sockets that could be read from my laptop using the tool mentioned above was critical for testing and integration.
 
-The design procedure relied on having the reference design as a starting point, signal processing knowledge, an understanding of the mathematics and physics involved, and the ability to iterate in rapid-prototyping environments like Matlab and Python until results agreed with expectations. We feel that this approach is suitable for research projects intending to demonstrate capability. While it is acknowledged that a more formal top-down methodology ensures success in a production environment, working in research and development, I have seen that creativity and persistence produce demonstration results quicker and cheaper than the process-oriented nature of production.
+The design procedure relied on having the reference design as a starting point, signal processing knowledge, an understanding of the mathematics and physics involved, and the ability to iterate in rapid-prototyping environments like Matlab and Python until results agreed with expectations. We feel that this approach is suitable for research projects intending to demonstrate capability. While it is acknowledged that a more formal top-down methodology ensures success in a production environment, working in research and development, we believe that creativity and persistence produce demonstration results quicker and cheaper than the process-oriented nature of production.
 
 ### System Description
 #### Specification of the public interface
@@ -32,7 +32,7 @@ The design procedure relied on having the reference design as a starting point, 
 ##### Outputs
 The Raspberry Pi does have the capability of running a desktop environment with graphics in order to display results, yet the overhead is significant and so the decision was made leave the Pi running in a headless manner and offload the resulting data over a local network to the development laptop for display. For test and debugging purposes, it was desirable to have the ability to visualize the data as it progressed throught the processing chain. The system output interface is visualized below.
 
-![output interface](figs/pi_zmq_laptop_interface.png)
+![SDR to Development Laptop Interface](figs/pi_zmq_laptop_interface.png)
 
 As seen, the program `netscope.m` takes a message name string for which a ZeroMQ socket is created which subscribes to that message type. The PUBLISH/SUBSCRIBE topology enables the Pi to artifically put all the data on the wire, yet only transfer the data that is requested. Matlab does not actually have a ZeroMQ implementation, yet it does expose a Python interface, through which ZeroMQ can be reached seamlessly.
 
@@ -41,6 +41,7 @@ In addition to the above the system also prints out status messages to the Raspb
 Were the system to progress into a more productized instantiation, offloading reports could be achieved over a ZigBee link. Of course, this would limit the data rate to discrete detection measurements as opposed to the current toolset which allows viewing the data at any stage in the processing chain.
 
 #### Algorithm Descriptions
+
 ##### Doppler CW
 A Doppler CW system is able to measure the instantaneous radial velocity of a moving object. When an electromagnetic wave reflects off of a moving object, say a car, the wave is shifted in frequency by an amount proportional to the wavelength of the RF signal and the projection of the car's velocity onto the line from whence the wave originated. Doppler CW systems use a continuous sinusoid shifted to the carrier frequency. When the received signal is mixed with the transmitted signal, the difference is output. By performing a Fourier Transform on the received data, over some period of coherency, the radar is able to measure the magnitude response of the data at various frequencies. These are then related to speed using the wavelength.
 
@@ -57,11 +58,11 @@ If we assume the upper bound of stationarity to be a car moving at 35 m.p.h that
 The other time constraint in this case is the ability of processing resources to handle the throughput requirements. Fortunately, the relatively slow speed of the objects of interest coupled with the fact that our system does not have the power to see beyond 1 km for a 10 square-meter target, means the information of interest is contained within a very narrow region of spectrum near DC. In fact, it is within the bandwidth of human auditory sensing. This pleasant coincidence results in an abundance of analog-to-digital converters with the requisite sample rates. This also means that our incoming data rate of 48000 samples/second is manageable for modern processor chips. Ultimately, required processing throughput depends on the data rate and the Raspberry Pi can handle a few audio signal processing operations within the required time frame.
 
 #### Error handling
-I will categorize the classes of errors as those which are induced by unexpected inputs, those induced by uncaught exceptions within the primary Python routine, and those induced by kernel scheduling, causing lag or loss of flow.
+We can categorize the classes of errors as those which are induced by unexpected inputs, those induced by uncaught exceptions within the primary Python routine, and those induced by kernel scheduling, causing lag or loss of flow.
 
 The first occur when the routine is unable to synchronize to the reference clock signal. This exception is caught by wrapping the sync block in a try/catch structure. If we are unable to sync, we want the routine to keep trying without falling apart. This reflects the software's inability to control external events, such as low battery power, fried circuits, or some other failure of the signal chain. Similarly, the routines downstream of sync need to predicate their execution on the indication from sync that everything is working. This is achieved with control flags once sync is achieved. Additionally, each pulse iteration checks the period of the sync interval to validate stability and throws a syncLost flag if sync is lost. Therefore, acquireSync is the initial state to which the routine returns if exceptions are encountered.
 
-The second, exceptions within the main Python routine, are due to software bugs and unexpected corner cases. For our prototyping system, these are addressed using the built-in Linux kernel control wrapper called `systemd`. I will stress that when the input is operating correctly and the kernel is able to keep up with the data processing and throughput requirements, there have as yet not been uncaught errors within the main loop.
+The second, exceptions within the main Python routine, are due to software bugs and unexpected corner cases. For our prototyping system, these are addressed using the built-in Linux kernel control wrapper called `systemd`. We stress that when the input is operating correctly and the kernel is able to keep up with the data processing and throughput requirements, there have as yet not been uncaught errors within the main loop.
 
 However, in order to handle the unexpected, three `systemd` unit modules were written to indicate what actions should be taken when one of the main programs crashes unexpectedly. The modules can be enabled as services which allow them be started automatically after a reboot once the kernel boot reaches the point where the device drivers have been intialized. Additionally, event actions can be specified, such as OnFailure or OnWatchdog. Precedence may be set such that program two waits until program one has successfully intitialized. In this way, we are leveraging the existing tool set within the wider Unix community to handle simple control flow and error handling. This is opposed to writing a custom routine to interact with the kernel scheduler. For a rapid-prototyped demonstrator, this reduces risk and cost. A produciton system might require more extensive effort to guarantee proper exception protocol and real-time scheduling priority.
 
@@ -69,9 +70,20 @@ This framework also enables handling the third failure mode where the kernel sch
 
 #### Hardware Implementation
 
-
 #### Software Implementation
+For brevity, we will focus on the Python real-time code here and not on the Matlab tools or prototyping routines. A flow chart is presented below for reference.
 
+![Software Flow Chart](figs/py_flow_chart.png)
+
+### Test Plan
+
+### Presentation, Discussion, and Analysis of Results
+
+### Analysis of Any Errors
+
+### Analysis of why the Project may not have worked and Efforts made to Identify root cause issues
+
+### Summary and Conclusion
 
 \newpage
 ## Code Listings
@@ -79,7 +91,6 @@ This framework also enables handling the third failure mode where the kernel sch
 ### Matlab Visualization Tools
 \inputminted{matlab}{matlab/netscope.m}
 \inputminted{matlab}{matlab/audioscope.m}
-\inputminted{matlab}{matlab/imagr.m}
 
 \newpage
 ### Matlab Algorithm Protyping
