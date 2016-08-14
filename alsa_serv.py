@@ -12,7 +12,7 @@ import sys
 
 # local imports
 N_SAMP = int(sys.argv[1])
-N_SAMP_BUFF = 6*N_SAMP
+N_SAMP_BUFF = 10*N_SAMP
 N_CHAN = 2
 FS = 48000
 PUB_PORT = 5555

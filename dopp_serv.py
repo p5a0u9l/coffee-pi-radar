@@ -16,7 +16,7 @@ import sdr
 M2FT = 3.28084
 C_LIGHT = 3e8
 BW = 300e6
-N_FFT = 4096
+N_FFT = 4096*4
 FS = 48000
 
 class Processor():
@@ -50,6 +50,7 @@ class Processor():
         self.format()
         self.x = sdr.lowpass(self.x)
         self.x = sdr.fft_filter(self.x, N_FFT)
+        self.x -= np.mean(self.x)
         self.detect()
 
 # init objects
