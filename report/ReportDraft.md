@@ -1,5 +1,5 @@
 # Report Drafting
-## Introduction
+## *INTRODUCTION*
 This project began as a conceived innovation to the MIT Coffee Can Radar [1], hereafter referred to as the reference design. The reference design demonstrated three different radar modes - Continuous-Wave (CW) Doppler, Frequency Modulated CW, and crude Synthetica Aperture Radar (SAR) - with minor hardware adjustments and using different processing algorithms. The system was interfaced with a laptop in order to acquire a block of data and then process the data offline and show results in Matlab. A block diagram is shown for reference.
 
 ![MIT Coffee Can Radar Block Diagram](figs/ref_design_block.png)
@@ -23,8 +23,6 @@ Initial design began with experimenting and rewriting the reference Matlab code 
 This process naturally led to the development of two tools which became essential throughout the development - software audio oscilliscopes that plugged into various source data formats. Eventually this settled into one program used to pull various results from the Pi to the development laptop and display the data in real-time in Matlab figures. The second program is similar except that is fetches data from either the disk or the sound card and performs some processing and then displays those results in a streaming fashion.
 
 Finally, algorithms were migrated to Python on the Linux system and development proceeded over remote shell only. During this phase, publishing results to sockets that could be read from my laptop using the tool mentioned above was critical for testing and integration.
-
-The design procedure relied on having the reference design as a starting point, signal processing knowledge, an understanding of the mathematics and physics involved, and the ability to iterate in rapid-prototyping environments like Matlab and Python until results agreed with expectations. We feel that this approach is suitable for research projects intending to demonstrate capability. While it is acknowledged that a more formal top-down methodology ensures success in a production environment, working in research and development, we believe that creativity and persistence produce demonstration results quicker and cheaper than the process-oriented nature of production.
 
 ### System Description
 #### Specification of the public interface
@@ -75,9 +73,30 @@ For brevity, we will focus on the Python real-time code here and not on the Matl
 
 ![Software Flow Chart](figs/py_flow_chart.png)
 
+The above diagram illustrates how the main routine, `sdr_main.py`, is structured with four data management classes. The Zmq class provides management of ZeroMQ sockets. The Queue class provides extensible buffers for interfacing with the audio server packets as well as handling formatting of socket byte arrays.
+
+There are two programs that both use these two objects. These are the FMCW application, which detects range, and the Doppler application, which detects radial speed. The Doppler processing is essentially a subset of the FMCW processing and so we will focus on that program.
+
+The primary algorithmic challenge of ranging is synchronizing the data to the transmitted pulses. The Sync class receives numeric data from the Queue and processes the clock signal to find the rising edges of the pulse. Using these indices it fills a matrix with the received samples corresponding to the transmitted chirps. Additionaly, Sync implements methods to ensure the clock period is stable.
+
+Finally, the Processor class performs a series of matrix operations on a buffer of chirp pulses to compute each pulse's range response. These include low-pass filtering, clutter cancellation, and discrete Fourier transform. Minus the Synchronization step and clutter cancellation, the Doppler processing is very similar.
+
+Each of these operate and are update in a loop in the main program. Additionally, there is a second program that interfaces between the sound server and `sdr_main.py`. This program executes a callback when there is new audio data available on the server and then publishes that to a ZeroMQ socket which the main program buffers.
+
 ### Test Plan
 
 ### Presentation, Discussion, and Analysis of Results
+Testing was performed by walking toward and away from the sensor. However, the more interesting results used cars as the sensed objects. The system was set on top of Paul's car, parked alongside a road in Maple Valley with a fair amount of traffic. The Raspberry Pi received and processed all data in real time and routed the results over a network link to the development laptop. The youtube link below contains two video streams, a recorded video of the traffic on the left, roughly synchronized to the range-time indicator waterfall on the right. Outgoing traffic can be seen as lines angled down and to the right. The oncoming traffic show as lines angled down and to left. The outgoing vehicles are brighter as the field-of-view is focused on these.
+
+[FMCW Ranging Demonstration](https://www.youtube.com/watch?v=gWq5N82Wgkw) https://www.youtube.com/watch?v=gWq5N82Wgkw
+
+The Doppler demonstration was collected much earlier in the project. In this case, the speed-time indicator waterfall is on the left while the right contains a static image which shows an overview of the entire collect. This video also contains processed audio proportional to the Doppler frequency.
+
+[Doppler Velocity Demonstration](https://www.youtube.com/watch?v=JB-oInUjbWk) https://www.youtube.com/watch?v=JB-oInUjbWk)
+
+These results demonstrated real-time processing of received radar data and measurement of environmental phenomena in two dimensions. Achieving the results in the FMCW video required significantly more work than the Doppler. The two challenges associated with FMCW were synchronizing streaming pulses and the 2-pulse canceller. For each, the challenge lay in ensuring the pulses were correctly stitched together over multiple buffers.
+
+On the FMCW display, the vehicle's range response continues out to about 200 meters. Greater distances could be achieved with more transmit power.
 
 ### Analysis of Any Errors
 
@@ -85,31 +104,23 @@ For brevity, we will focus on the Python real-time code here and not on the Matl
 
 ### Summary and Conclusion
 
-\newpage
-## Code Listings
+We have demonstrated development of a complete radar sensor using off-the-shelf hardware and dynamic programming languages. We were able to demonstrate two separate modes of operation and are able to switch using software only. Future research could take this design, complete the PCB print, and add interfacing inputs to recieve signal inputs from the Pi. In this manner, steps could be made toward a Cognitive Radar that tuned parameters based on measurements.
 
-### Matlab Visualization Tools
-\inputminted{matlab}{matlab/netscope.m}
-\inputminted{matlab}{matlab/audioscope.m}
+In concept, the algorithms that perform the kernel of the work are relatively straightforward. One lesson learned was that porting those prototyping code to run in real-time with streaming data was a significant challenge. Additionally, the nature of developing on a unit without a built-in display requires robust connectivity between development and target platforms. In our experience, both the Wi-Fi and Ethernet links typically required manual intervention to operate properly.
 
-\newpage
-### Matlab Algorithm Protyping
-\inputminted{matlab}{matlab/batch_fmcw_detection.m}
-\inputminted{matlab}{matlab/DopplerConfig.m}
-\inputminted{matlab}{matlab/batch_doppler_example.m}
-\inputminted{matlab}{matlab/run_event_doppler.m}
-\inputminted{matlab}{matlab/event_doppler.m}
+### Individual Contribution
+# Paul Adams
+o Imaging, set-up and configuration of the Raspberry Pi 2
 
-\newpage
-### Python Main Programs
-\inputminted{python}{serv-alsa.py}
-\inputminted{python}{serv-fmcw.py}
+o All real-time Python software
 
-\newpage
-### Shell Scripts and systemd Modules
-\inputminted{bash}{eth0-startup.sh}
-\inputminted{bash}{kill-all.sh}
-\inputminted{bash}{start-all.sh}
-\inputminted{bash}{jackd.service}
-\inputminted{bash}{serv-fmcw.service}
-\inputminted{bash}{serv-alsa.service}
+o All Matlab prototyping and tool software
+
+o All automating and utility bash scripts and Linux service interaction
+
+o Testing and configuration of 3rd libraries on Linux
+
+o All system testing and integration
+
+o Development of all algorithms that deviated from reference design
+

@@ -53,7 +53,6 @@ class Queue():
         idx = data[0:100].find(';;;')
         header = data[0:idx]
         self.time = float(header[header.find(':')+1:header.find(';;;')])
-        #import pdb; pdb.set_trace()
         x = (np.fromstring(data[idx+3::], np.int32)).astype(np.float)/2**31
         self.sig = x[SGNL_CHAN::2]
         self.ref = x[SYNC_CHAN::2]

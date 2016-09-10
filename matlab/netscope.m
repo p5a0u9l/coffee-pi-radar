@@ -56,7 +56,10 @@ function netscope(varargin)
             [x, wf, pl, img] = init_figures(v);
         end
         for i = 1:n_row
-            pl(i).YData = x(i, :);
+            try
+                pl(i).YData = x(i, :);
+            catch
+            end
         end
         drawnow;
     end
